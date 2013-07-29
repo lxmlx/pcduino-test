@@ -1,0 +1,168 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+.sram            0x00000020         0x00006000
+.sdram           0x50000000         0x00080000
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.text           0x00000020      0xc9c
+                0x00000020                __start = .
+ start.o(.text)
+ .text          0x00000020       0xe0 start.o
+                0x00000020                _start
+                0x00000060                _end_vect
+                0x00000060                _TEXT_BASE
+                0x00000064                _bss_start_ofs
+                0x00000068                _bss_end_ofs
+                0x0000006c                _end_ofs
+                0x000000b0                cpu_init_cp15
+                0x000000f0                cpu_init_crit
+ *(.text*)
+ .text          0x00000100       0x4c main.o
+                0x00000100                main
+ .text          0x0000014c       0xe4 watchdog.o
+                0x0000014c                watchdog_reset
+                0x00000184                watchdog_set
+                0x0000021c                watchdog_init
+ .text          0x00000230      0x174 clock.o
+                0x000002a8                clock_init
+                0x00000344                clock_twi_onoff
+ .text          0x000003a4      0x15c syslib.o
+                0x000003a4                sdelay
+                0x000003d0                sr32
+                0x00000470                wait_on_value
+ .text          0x00000500      0x4f4 pinmux.o
+                0x00000500                sunxi_gpio_set_cfgpin
+                0x000005f0                sunxi_gpio_get_cfgpin
+                0x00000698                sunxi_gpio_set_pull
+                0x00000790                sunxi_gpio_set_drv
+                0x00000888                sunxi_gpio_set_dat_bit
+                0x0000095c                sunxi_gpio_get_dat_bit
+ .text          0x000009f4       0x44 gpio.o
+                0x000009f4                gpio_init
+ .text          0x00000a38       0xc4 led.o
+                0x00000a38                led_init
+                0x00000a7c                led_tx_on
+                0x00000a9c                led_tx_off
+                0x00000abc                led_rx_on
+                0x00000adc                led_rx_off
+ .text          0x00000afc      0x1c0 uart.o
+                0x00000afc                uart_init
+                0x00000c14                uart_getchar
+                0x00000c64                uart_putchar
+
+.glue_7         0x00000000        0x0
+ .glue_7        0x00000000        0x0 linker stubs
+
+.glue_7t        0x00000000        0x0
+ .glue_7t       0x00000000        0x0 linker stubs
+
+.vfp11_veneer   0x00000000        0x0
+ .vfp11_veneer  0x00000000        0x0 linker stubs
+
+.v4_bx          0x00000000        0x0
+ .v4_bx         0x00000000        0x0 linker stubs
+                0x00000000                . = ALIGN (0x4)
+
+.rodata         0x00000cbc       0x48
+ *(SORT(.rodata*))
+ .rodata        0x00000cbc       0x48 watchdog.o
+                0x00000cbc                wdt_timeout_map
+                0x00000d04                . = ALIGN (0x4)
+
+.data           0x00000d04       0x7c
+ *(SORT(.data*))
+ .data          0x00000d04        0x4 watchdog.o
+ .data          0x00000d08       0x78 clock.o
+                0x00000d08                pll1_para
+ .data          0x00000d80        0x0 start.o
+ .data          0x00000d80        0x0 main.o
+ .data          0x00000d80        0x0 syslib.o
+ .data          0x00000d80        0x0 pinmux.o
+ .data          0x00000d80        0x0 gpio.o
+ .data          0x00000d80        0x0 led.o
+ .data          0x00000d80        0x0 uart.o
+                0x00000d80                . = ALIGN (0x4)
+                0x00000d80                __image_copy_end = .
+                0x00000d80                _end = .
+
+.bss            0x50000000        0x0
+                0x50000000                . = ALIGN (0x4)
+                0x50000000                __bss_start = .
+ *(.bss*)
+ .bss           0x50000000        0x0 start.o
+ .bss           0x50000000        0x0 main.o
+ .bss           0x50000000        0x0 watchdog.o
+ .bss           0x50000000        0x0 clock.o
+ .bss           0x50000000        0x0 syslib.o
+ .bss           0x50000000        0x0 pinmux.o
+ .bss           0x50000000        0x0 gpio.o
+ .bss           0x50000000        0x0 led.o
+ .bss           0x50000000        0x0 uart.o
+                0x50000000                . = ALIGN (0x4)
+                0x50000000                __bss_end = .
+Address of section .text set to 0x20
+LOAD start.o
+LOAD main.o
+LOAD watchdog.o
+LOAD clock.o
+LOAD syslib.o
+LOAD pinmux.o
+LOAD gpio.o
+LOAD led.o
+LOAD uart.o
+OUTPUT(led_elf elf32-littlearm)
+
+.ARM.attributes
+                0x00000000       0x27
+ .ARM.attributes
+                0x00000000       0x1b start.o
+ .ARM.attributes
+                0x0000001b       0x2b main.o
+ .ARM.attributes
+                0x00000046       0x2b watchdog.o
+ .ARM.attributes
+                0x00000071       0x2b clock.o
+ .ARM.attributes
+                0x0000009c       0x2b syslib.o
+ .ARM.attributes
+                0x000000c7       0x2b pinmux.o
+ .ARM.attributes
+                0x000000f2       0x2b gpio.o
+ .ARM.attributes
+                0x0000011d       0x2b led.o
+ .ARM.attributes
+                0x00000148       0x2b uart.o
+
+.comment        0x00000000      0x150
+ .comment       0x00000000       0x2a main.o
+ .comment       0x0000002a       0x2a watchdog.o
+ .comment       0x00000054       0x2a clock.o
+ .comment       0x0000007e       0x2a syslib.o
+ .comment       0x000000a8       0x2a pinmux.o
+ .comment       0x000000d2       0x2a gpio.o
+ .comment       0x000000fc       0x2a led.o
+ .comment       0x00000126       0x2a uart.o
+
+.note.GNU-stack
+                0x00000000        0x0
+ .note.GNU-stack
+                0x00000000        0x0 main.o
+ .note.GNU-stack
+                0x00000000        0x0 watchdog.o
+ .note.GNU-stack
+                0x00000000        0x0 clock.o
+ .note.GNU-stack
+                0x00000000        0x0 syslib.o
+ .note.GNU-stack
+                0x00000000        0x0 pinmux.o
+ .note.GNU-stack
+                0x00000000        0x0 gpio.o
+ .note.GNU-stack
+                0x00000000        0x0 led.o
+ .note.GNU-stack
+                0x00000000        0x0 uart.o
