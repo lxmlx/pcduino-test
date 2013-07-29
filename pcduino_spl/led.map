@@ -1,0 +1,92 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+.sram            0x00000020         0x00006000
+.sdram           0x50000000         0x00080000
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.text           0x00000020      0x29c
+                0x00000020                __start = .
+ start.o(.text)
+ .text          0x00000020       0xe0 start.o
+                0x00000020                _start
+                0x00000060                _end_vect
+                0x00000060                _TEXT_BASE
+                0x00000064                _bss_start_ofs
+                0x00000068                _bss_end_ofs
+                0x0000006c                _end_ofs
+                0x000000b0                cpu_init_cp15
+                0x000000f0                cpu_init_crit
+ *(.text*)
+ .text          0x00000100      0x138 main.o
+                0x00000100                gpio_init
+                0x000001a0                delay
+                0x000001e8                main
+ .text          0x00000238       0x84 clock.o
+                0x00000238                sdelay
+                0x00000264                clock_init
+
+.glue_7         0x00000000        0x0
+ .glue_7        0x00000000        0x0 linker stubs
+
+.glue_7t        0x00000000        0x0
+ .glue_7t       0x00000000        0x0 linker stubs
+
+.vfp11_veneer   0x00000000        0x0
+ .vfp11_veneer  0x00000000        0x0 linker stubs
+
+.v4_bx          0x00000000        0x0
+ .v4_bx         0x00000000        0x0 linker stubs
+                0x00000000                . = ALIGN (0x4)
+
+.rodata
+ *(SORT(.rodata*))
+                0x00000000                . = ALIGN (0x4)
+
+.data           0x000002bc        0x0
+ *(SORT(.data*))
+ .data          0x000002bc        0x0 start.o
+ .data          0x000002bc        0x0 main.o
+ .data          0x000002bc        0x0 clock.o
+                0x000002bc                . = ALIGN (0x4)
+                0x000002bc                __image_copy_end = .
+                0x000002bc                _end = .
+
+.bss            0x50000000        0x0
+                0x50000000                . = ALIGN (0x4)
+                0x50000000                __bss_start = .
+ *(.bss*)
+ .bss           0x50000000        0x0 start.o
+ .bss           0x50000000        0x0 main.o
+ .bss           0x50000000        0x0 clock.o
+                0x50000000                . = ALIGN (0x4)
+                0x50000000                __bss_end = .
+Address of section .text set to 0x20
+LOAD start.o
+LOAD main.o
+LOAD clock.o
+OUTPUT(led_elf elf32-littlearm)
+
+.ARM.attributes
+                0x00000000       0x27
+ .ARM.attributes
+                0x00000000       0x1b start.o
+ .ARM.attributes
+                0x0000001b       0x2b main.o
+ .ARM.attributes
+                0x00000046       0x2b clock.o
+
+.comment        0x00000000       0x54
+ .comment       0x00000000       0x2a main.o
+ .comment       0x0000002a       0x2a clock.o
+
+.note.GNU-stack
+                0x00000000        0x0
+ .note.GNU-stack
+                0x00000000        0x0 main.o
+ .note.GNU-stack
+                0x00000000        0x0 clock.o
