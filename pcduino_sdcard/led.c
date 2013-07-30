@@ -40,3 +40,16 @@ int led_rx_off(void)
 	return 0;
 
 }
+
+void led_hang(unsigned long delay)
+{
+	led_init();
+	while (1) {
+		led_tx_off();
+		led_rx_on();
+		sdelay(delay);
+		led_tx_on();
+		led_rx_off();
+		sdelay(delay);
+	};
+}

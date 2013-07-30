@@ -5,6 +5,7 @@
 #include "common.h"
 #include "clock.h"
 #include "gpio.h"
+#include "led.h"
 
 struct sunxi_mmc_des {
 	u32 reserved1_1:1;

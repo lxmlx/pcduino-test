@@ -4,6 +4,7 @@
 #include "types.h"
 #include "list.h"
 #include "part.h"
+#include "u-boot.h"
 
 #define SD_VERSION_SD	0x20000
 #define SD_VERSION_3	(SD_VERSION_SD | 0x300)
@@ -261,5 +262,10 @@ struct mmc {
 };
 
 int mmc_register(struct mmc *mmc);
+int mmc_initialize(bd_t *bis);
+struct mmc *find_mmc_device(int dev_num);
+int mmc_init(struct mmc *mmc);
+
+#define mmc_host_is_spi(mmc)	((mmc)->host_caps & MMC_MODE_SPI)
 
 #endif

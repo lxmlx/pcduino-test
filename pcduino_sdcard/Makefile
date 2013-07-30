@@ -4,22 +4,31 @@ sdcards.bin:sdcard.bin
 CC=arm-none-linux-gnueabi-gcc
 PLATFORM_LIBGCC := -L $(shell dirname `$(CC) $(CFLAGS) -print-libgcc-file-name`) -lgcc
 
-sdcard.bin:start.S main.c watchdog.c clock.c syslib.c pinmux.c gpio.c led.c string.c mmc.c eabi_compat.c
-	arm-none-linux-gnueabi-gcc -nostdlib -c start.S -o start.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c main.c -o main.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c watchdog.c -o watchdog.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c clock.c -o clock.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c syslib.c -o syslib.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c pinmux.c -o pinmux.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c gpio.c -o gpio.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c led.c -o led.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c string.c -o string.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c mmc.c -o mmc.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c sunxi_mmc.c -o sunxi_mmc.o
-	arm-none-linux-gnueabi-gcc -nostdlib -c eabi_compat.c -o eabi_compat.o
-	arm-none-linux-gnueabi-ld -T u-boot-spl.lds -Ttext 0x20 start.o main.o watchdog.o clock.o syslib.o pinmux.o gpio.o led.o string.o mmc.o sunxi_mmc.o eabi_compat.o $(PLATFORM_LIBGCC) -Map sdcard.map -o sdcard_elf
+OBJS-y += start.o
+OBJS-y += main.o
+OBJS-y += watchdog.o
+OBJS-y += clock.o
+OBJS-y += syslib.o
+OBJS-y += pinmux.o
+OBJS-y += gpio.o
+OBJS-y += led.o
+OBJS-y += string.o
+OBJS-y += mmc.o
+OBJS-y += sunxi_mmc.o
+OBJS-y += eabi_compat.o
+OBJS-y += timer.o
+OBJS-y += time.o
+
+sdcard.bin: $(OBJS-y) u-boot-spl.lds
+	arm-none-linux-gnueabi-ld -T u-boot-spl.lds --gc-sections -Ttext 0x20 $(OBJS-y) $(PLATFORM_LIBGCC) -Map sdcard.map -o sdcard_elf
 	arm-none-linux-gnueabi-objcopy -O binary -S sdcard_elf sdcard.bin
 	arm-none-linux-gnueabi-objdump -D sdcard_elf > sdcard.dis
+
+%.o: %.S
+	$(CC) -nostdlib -c $< -o $@
+
+%.o: %.c
+	$(CC) -nostdlib -c $< -o $@
 
 clean:
 	rm -rf *.o *.bin *elf *.dis *.map *~

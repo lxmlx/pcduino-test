@@ -7,6 +7,8 @@ int raise(int signum);
 /* A10-EVB has 1 banks of DRAM, we use only one in U-Boot */
 #define CONFIG_NR_DRAM_BANKS		1
 
+#define CONFIG_SYS_HZ			1000
+
 /**
  * container_of - cast a member of a structure out to the containing structure
  * @ptr:	the pointer to the member.

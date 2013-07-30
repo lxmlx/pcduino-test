@@ -71,4 +71,8 @@ struct sunxi_timer_reg {
 	u32 cpu_cfg;
 };
 
+int timer_init(void);
+void __udelay(unsigned long usec);
+ulong read_timer(void);
+
 #endif
