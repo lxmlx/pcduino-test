@@ -3,6 +3,7 @@
 #include "u-boot.h"
 #include "led.h"
 #include "timer.h"
+#include "uart.h"
 
 /* Set block count limit because of 16 bit register limit on some hardware*/
 #ifndef CONFIG_SYS_MMC_MAX_BLK_COUNT
@@ -359,6 +360,8 @@ static int sd_send_op_cond(struct mmc *mmc)
 	int err;
 	struct mmc_cmd cmd;
 
+	uart_puts("sd send op cond\n");
+
 	do {
 		cmd.cmdidx = MMC_CMD_APP_CMD;
 		cmd.resp_type = MMC_RSP_R1;
@@ -379,6 +382,7 @@ static int sd_send_op_cond(struct mmc *mmc)
 		 * how to manage low voltages SD card is not yet
 		 * specified.
 		 */
+
 		cmd.cmdarg = mmc_host_is_spi(mmc) ? 0 :
 			(mmc->voltages & 0xff8000);
 
@@ -398,6 +402,7 @@ static int sd_send_op_cond(struct mmc *mmc)
 
 	if (mmc->version != SD_VERSION_2)
 		mmc->version = SD_VERSION_1_0;
+
 
 	if (mmc_host_is_spi(mmc)) { /* read OCR for spi */
 		cmd.cmdidx = MMC_CMD_SPI_READ_OCR;
@@ -546,8 +551,10 @@ int mmc_start_init(struct mmc *mmc)
 {
 	int err;
 
+	uart_puts("mmc start init\n");
 	if (mmc_getcd(mmc) == 0) {
 		mmc->has_init = 0;
+		uart_puts("MMC: no card present\n");
 		return NO_CARD_ERR;
 	}
 
@@ -580,8 +587,10 @@ int mmc_start_init(struct mmc *mmc)
 	if (err == TIMEOUT) {
 		err = mmc_send_op_cond(mmc);
 
-		if (err && (err != IN_PROGRESS))
+		if (err && (err != IN_PROGRESS)) {
+			uart_puts("card did not respond to voltage select!\n");
 			return 0;
+		}
 	}
 
 	if (err == IN_PROGRESS)
@@ -594,6 +603,7 @@ static int mmc_complete_init(struct mmc *mmc)
 {
 	int err = 0;
 
+	uart_puts("mmc complete init\n");
 	if (mmc->op_cond_pending)
 		err = mmc_complete_op_cond(mmc);
 

@@ -18,6 +18,7 @@ OBJS-y += sunxi_mmc.o
 OBJS-y += eabi_compat.o
 OBJS-y += timer.o
 OBJS-y += time.o
+OBJS-y += uart.o
 
 sdcard.bin: $(OBJS-y) u-boot-spl.lds
 	arm-none-linux-gnueabi-ld -T u-boot-spl.lds --gc-sections -Ttext 0x20 $(OBJS-y) $(PLATFORM_LIBGCC) -Map sdcard.map -o sdcard_elf
