@@ -15,7 +15,6 @@ OBJS-y += led.o
 OBJS-y += string.o
 OBJS-y += eabi_compat.o
 OBJS-y += timer.o
-OBJS-y += time.o
 OBJS-y += uart.o
 OBJS-y += dram.o
 OBJS-y += memsize.o

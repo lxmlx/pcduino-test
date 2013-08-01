@@ -5,7 +5,7 @@
 #include "types.h"
 #include "global_data.h"
 #include "common.h"
-
+#include "string.h"
 
 #define TIMER_MODE_CONTINOUS	(0x0 << 7)	/* continuous mode */
 #define TIMER_MODE_SINGLE	(0x1 << 7)
@@ -121,10 +121,10 @@ u32 read_timer(int idx)
 	return READ_TIMER(idx);
 }
 
-void timer0_cndelay(unsigned long cnt)
+void timer0_cndelay(u32 cnt)
 {
-	long tmo = cnt;
-	ulong now, last = READ_TIMER(0);
+	u32 tmo = cnt, tmolast = cnt;
+	u32 now, last = READ_TIMER(0);
 
 	while (tmo > 0) {
 		now = READ_TIMER(0);
@@ -133,13 +133,19 @@ void timer0_cndelay(unsigned long cnt)
 		else
 			tmo -= TIMER0_LOAD_VAL - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-void timer0_udelay(unsigned long usec)
+void timer0_udelay(u32 usec)
 {
-	long tmo = (TIMER0_CLOCK / 1000000 ) * usec;
-	ulong now, last = READ_TIMER(0);
+	u32 tmo = (TIMER0_CLOCK / 1000000 ) * usec;
+	u32 tmolast = tmo;
+	u32 now, last = READ_TIMER(0);
 
 	while (tmo > 0) {
 		now = READ_TIMER(0);
@@ -148,13 +154,18 @@ void timer0_udelay(unsigned long usec)
 		else		/* rollover */
 			tmo -= TIMER0_LOAD_VAL - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-void timer1_cndelay(unsigned long cnt)
+void timer1_cndelay(u32 cnt)
 {
-	long tmo = cnt;
-	ulong now, last = READ_TIMER(1);
+	u32 tmo = cnt, tmolast = cnt;
+	u32 now, last = READ_TIMER(1);
 
 	while (tmo > 0) {
 		now = READ_TIMER(1);
@@ -163,13 +174,19 @@ void timer1_cndelay(unsigned long cnt)
 		else
 			tmo -= TIMER1_LOAD_VAL - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-void timer1_udelay(unsigned long usec)
+void timer1_udelay(u32 usec)
 {
-	long tmo = (TIMER1_CLOCK / 1000000 ) * usec;
-	ulong now, last = READ_TIMER(1);
+	u32 tmo = (TIMER1_CLOCK / 1000000 ) * usec;
+	u32 tmolast = tmo;
+	u32 now, last = READ_TIMER(1);
 
 	while (tmo > 0) {
 		now = READ_TIMER(1);
@@ -178,13 +195,18 @@ void timer1_udelay(unsigned long usec)
 		else		/* rollover */
 			tmo -= TIMER1_LOAD_VAL - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-void timer2_cndelay(unsigned long cnt)
+void timer2_cndelay(u32 cnt)
 {
-	long tmo = cnt;
-	ulong now, last = READ_TIMER(2);
+	u32 tmo = cnt, tmolast = cnt;
+	u32 now, last = READ_TIMER(2);
 
 	while (tmo > 0) {
 		now = READ_TIMER(2);
@@ -193,13 +215,19 @@ void timer2_cndelay(unsigned long cnt)
 		else
 			tmo -= TIMER2_LOAD_VAL - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-void timer2_udelay(unsigned long usec)
+void timer2_udelay(u32 usec)
 {
-	long tmo = (TIMER2_CLOCK / 1000000 ) * usec;
-	ulong now, last = READ_TIMER(2);
+	u32 tmo = (TIMER2_CLOCK / 1000000 ) * usec;
+	u32 tmolast = tmo;
+	u32 now, last = READ_TIMER(2);
 
 	while (tmo > 0) {
 		now = READ_TIMER(2);
@@ -208,13 +236,18 @@ void timer2_udelay(unsigned long usec)
 		else
 			tmo -= TIMER2_LOAD_VAL - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-void timer4_cndelay(unsigned long cnt)
+void timer4_cndelay(u32 cnt)
 {
-	long tmo = cnt;
-	ulong now, last = READ_TIMER(4);
+	u32 tmo = cnt, tmolast = cnt;
+	u32 now, last = READ_TIMER(4);
 
 	while (tmo > 0) {
 		now = READ_TIMER(4);
@@ -223,13 +256,19 @@ void timer4_cndelay(unsigned long cnt)
 		else
 			tmo -= TIMER4_LOAD_VAL - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-void timer4_mdelay(unsigned long msec)
+void timer4_mdelay(u32 msec)
 {
-	long tmo = (TIMER4_CLOCK / 1000) * msec;
-	ulong now, last = READ_TIMER(4);
+	u32 tmo = (TIMER4_CLOCK / 1000) * msec;
+	u32 tmolast = tmo;
+	u32 now, last = READ_TIMER(4);
 
 	while (tmo > 0) {
 		now = READ_TIMER(4);
@@ -238,13 +277,18 @@ void timer4_mdelay(unsigned long msec)
 		else		/* rollover */
 			tmo -= TIMER4_LOAD_VAL - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-void timer5_cndelay(unsigned long cnt)
+void timer5_cndelay(u32 cnt)
 {
-	long tmo = cnt;
-	ulong now, last = READ_TIMER(5);
+	u32 tmo = cnt, tmolast = cnt;
+	u32 now, last = READ_TIMER(5);
 
 	while (tmo > 0) {
 		now = READ_TIMER(5);
@@ -253,35 +297,46 @@ void timer5_cndelay(unsigned long cnt)
 		else
 			tmo -= TIMER5_LOAD_VAL - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-void timer5_mdelay(unsigned long msec)
+void timer5_mdelay(u32 msec)
 {
-	long tmo = (TIMER5_CLOCK / 1000) * msec;
-	ulong now, last = READ_TIMER(5);
+	u32 tmo = (TIMER5_CLOCK / 1000) * msec;
+	u32 tmolast = tmo;
+	u32 now, last = READ_TIMER(5);
 
 	while (tmo > 0) {
 		now = READ_TIMER(5);
 		if (now > last)	/* normal (non rollover) */
 			tmo -= now - last;
-		else		/* rollover */
+		else
 			tmo -= TIMER5_LOAD_VAL - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-/* cn to usec seems have some problem */
-void __udelay(unsigned long usec)
+void __udelay(u32 msec)
 {
-	timer0_udelay(usec);
+	while(msec--)
+		timer0_udelay(1000);
 }
-
 
 int timer_init_avs(void)
 {
 	writel(AVS_CNT1_D(24) | AVS_CNT0_D(24), &timer_base->avs.div);
 	writel(AVS_CNT1_EN | AVS_CNT0_EN, &timer_base->avs.ctl);
+	return 0;
 }
 
 u32 read_avs(int idx)
@@ -296,10 +351,10 @@ u32 read_avs(int idx)
 	}
 }
 
-void avscnt0_cndelay(unsigned long cnt)
+void avscnt0_cndelay(u32 cnt)
 {
-	long tmo = cnt;
-	ulong now, last = read_avscnt0;
+	u32 tmo = cnt, tmolast = cnt;
+	u32 now, last = read_avscnt0;
 
 	while (tmo > 0) {
 		now = read_avscnt0;
@@ -308,13 +363,18 @@ void avscnt0_cndelay(unsigned long cnt)
 		else if (now < last)
 			tmo -= AVS_CNT0_MAX - last + now;
 		last = now;
+		
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
-void avscnt1_cndelay(unsigned long cnt)
+void avscnt1_cndelay(u32 cnt)
 {
-	long tmo = cnt;
-	ulong now, last = read_avscnt1;
+	u32 tmo = cnt, tmolast = cnt;
+	u32 now, last = read_avscnt1;
 
 	while (tmo > 0) {
 		now = read_avscnt1;
@@ -323,23 +383,32 @@ void avscnt1_cndelay(unsigned long cnt)
 		else if (now < last)
 			tmo -= AVS_CNT1_MAX - last + now;
 		last = now;
+
+		if (tmo > tmolast)
+			break;
+		tmolast = tmo;
 	}
+	return;
 }
 
 int timer_init_wdog(void)
 {
+	return 0;
 }
 
 int timer_init_cnt64(void)
 {
+	return 0;
 }
 
 int timer_init_rtc(void)
 {
+	return 0;
 }
 
 int timer_init_alarm(void)
 {
+	return 0;
 }
 
 int timer_init_all(void)

@@ -72,7 +72,8 @@ struct sunxi_timer_reg {
 };
 
 int timer_init_all(void);
-void __udelay(unsigned long usec);
+/* 既然延时不可能是负数，那么算法里面，就都用无符号吧。 */
+void __udelay(u32 usec);
 u32 read_timer(int idx);
 
 #endif
