@@ -5,7 +5,7 @@
 #include "common.h"
 #include "clock.h"
 #include "gpio.h"
-#include "led.h"
+#include "uart.h"
 
 struct sunxi_mmc_des {
 	u32 reserved1_1:1;
@@ -42,8 +42,8 @@ struct sunxi_mmc_host {
 };
 
 /* support 4 mmc hosts */
-struct mmc mmc_dev[4];
-struct sunxi_mmc_host mmc_host[4];
+struct mmc mmc_dev[1];
+struct sunxi_mmc_host mmc_host[1];
 
 static int mmc_resource_init(int sdc_no)
 {
@@ -450,3 +450,58 @@ int sunxi_mmc_init(int sdc_no)
 	return 0;
 }
 
+static int mmc_set_blocklen(struct mmc *mmc, int len)
+{
+	struct mmc_cmd cmd;
+	cmd.cmdidx = MMC_CMD_SET_BLOCKLEN;
+	cmd.resp_type = MMC_RSP_R1;
+	cmd.cmdarg = len;
+	return mmc_send_cmd(mmc, &cmd, NULL);
+}
+
+static int mmc_read_blocks(struct mmc *mmc, void *dst, ulong start,
+			   ulong blkcnt)
+{
+	struct mmc_cmd cmd;
+	struct mmc_data data;
+
+	if (blkcnt > 1)
+		cmd.cmdidx = MMC_CMD_READ_MULTIPLE_BLOCK;
+	else
+		cmd.cmdidx = MMC_CMD_READ_SINGLE_BLOCK;
+
+	if (mmc->high_capacity)
+		cmd.cmdarg = start;
+	else
+		cmd.cmdarg = start * mmc->read_bl_len;
+
+	cmd.resp_type = MMC_RSP_R1;
+
+	data.dest = dst;
+	data.blocks = blkcnt;
+	data.blocksize = mmc->read_bl_len;
+	data.flags = MMC_DATA_READ;
+
+	if (mmc_send_cmd(mmc, &cmd, &data))
+		return 0;
+
+	if (blkcnt > 1) {
+		cmd.cmdidx = MMC_CMD_STOP_TRANSMISSION;
+		cmd.cmdarg = 0;
+		cmd.resp_type = MMC_RSP_R1b;
+		if (mmc_send_cmd(mmc, &cmd, NULL)) {
+			uart_puts("mmc fail to send stop cmd\n");
+			return 0;
+		}
+	}
+
+	return blkcnt;
+}
+
+ulong mmc_bread(int dev_num, ulong start, ulong blkcnt, void *dst)
+{
+	struct mmc *mmc = &mmc_dev[dev_num];
+
+	mmc_set_blocklen(mmc, mmc->read_bl_len);
+	mmc_read_blocks(mmc, dst, start, blkcnt);
+}

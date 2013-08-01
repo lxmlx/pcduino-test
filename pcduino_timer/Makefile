@@ -19,6 +19,9 @@ OBJS-y += time.o
 OBJS-y += uart.o
 OBJS-y += dram.o
 OBJS-y += memsize.o
+OBJS-y += vsprintf.o
+OBJS-y += ctype.o
+OBJS-y += sunxi_mmc.o
 
 timer.bin: $(OBJS-y) u-boot-spl.lds
 	arm-none-linux-gnueabi-ld -T u-boot-spl.lds --gc-sections -Ttext 0x20 $(OBJS-y) $(PLATFORM_LIBGCC) -Map timer.map -o timer_elf
@@ -29,7 +32,7 @@ timer.bin: $(OBJS-y) u-boot-spl.lds
 	$(CC) -nostdlib -c $< -o $@
 
 %.o: %.c
-	$(CC) -nostdlib -c $< -o $@
+	$(CC) -nostdlib -O2 -c $< -o $@
 
 clean:
 	rm -rf *.o *.bin *elf *.dis *.map *~
