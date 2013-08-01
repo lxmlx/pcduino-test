@@ -9,8 +9,6 @@
 #include "dram.h"
 #include "io.h"
 #include "string.h"
-#include "sunxi_mmc.h"
-#include "mmc.h"
 
 void test_dram()
 {
@@ -126,10 +124,9 @@ void test_timer(int times)
 		timer5_mdelay(100);
 	};
 	uart_puts("timer4,5 ok!\n");
-/* timer5 seems don't work corect */
 	cur = 0;
-	//while (cur++ < times) {
-	while(0) {
+	while (cur++ < times) {
+	//while(0) {
 		led_tx_off();
 		led_rx_on();
 		avscnt0_cndelay(100);
@@ -137,7 +134,7 @@ void test_timer(int times)
 		led_rx_off();
 		avscnt1_cndelay(100);
 	}
-	//uart_puts("avs0,1 ok!\n");
+	uart_puts("avs0,1 ok!\n");
 /* avs seems not work corect */
 
 
@@ -145,16 +142,6 @@ void test_timer(int times)
 	uart_puts("turn off the led.\n");
 	led_tx_off();
 	led_rx_off();
-}
-
-void test_sdcard()
-{
-	ulong data = 0;
-	char *dst = (char *)0x40000000;
-
-	mmc_bread(0, 16, 1, dst);
-	readl(dst);
-	uart_puts(simple_itoa(data));	
 }
 
 int main(void)
@@ -165,11 +152,9 @@ int main(void)
 	uart_init();
 	timer_init_all();
 	sunxi_dram_init();
-	sunxi_mmc_init(0);
 	test_uart();
 	test_timer(10); /* fanle? */
 	test_dram();
-	//test_sdcard();
 	uart_puts("now go hang\n");
 	led_hang(10000000);
 	return 0;
