@@ -99,18 +99,17 @@ void test_timer(int times)
 		led_rx_off();
 		timer4_mdelay(100);
 	};
-	cur = 0;
+/* timer5 seems don't work corect */
+/*	cur = 0;
 	while (cur++ < times) {
 		led_tx_off();
 		led_rx_on();
 		timer4_cndelay(150000);
 		led_tx_on();
 		led_rx_off();
-		timer5_cndelay(37500); /* 24 * 1000 * 1000 / 64 */
+		timer5_cndelay(37500); 
 	};
-/* timer5 seems slower */
-
-/*	cur = 0;
+	cur = 0;
 	while (cur++ < times) {
 		led_tx_off();
 		led_rx_on();

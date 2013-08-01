@@ -32,7 +32,7 @@ timer.bin: $(OBJS-y) u-boot-spl.lds
 	$(CC) -nostdlib -c $< -o $@
 
 %.o: %.c
-	$(CC) -nostdlib -O2 -c $< -o $@
+	$(CC) -nostdlib -Os -c $< -o $@
 
 clean:
 	rm -rf *.o *.bin *elf *.dis *.map *~
