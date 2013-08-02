@@ -3,6 +3,10 @@
 #include "erron.h"
 #include "stddef.h"
 #include "ctype.h"
+#include <stdarg.h>
+#include "div64.h"
+
+#define noinline __attribute__((noinline))
 
 /* some reluctance to put this into a new limits.h, so it is here */
 #define INT_MAX		((int)(~0U>>1))
@@ -260,6 +264,17 @@ static char *put_dec_full(char *buf, unsigned q)
 	return buf;
 }
 
+static noinline char *put_dec(char *buf, u64 num)
+{
+	while (1) {
+		unsigned rem;
+		if (num < 100000)
+			return put_dec_trunc(buf, num);
+		rem = do_div(num, 100000);
+		buf = put_dec_full(buf, rem);
+	}
+}
+
 #define ZEROPAD	1		/* pad with zero */
 #define SIGN	2		/* unsigned/signed long */
 #define PLUS	4		/* show plus */
@@ -269,6 +284,105 @@ static char *put_dec_full(char *buf, unsigned q)
 #define SPECIAL	64		/* 0x */
 
 #define ADDCH(str, ch)	(*(str)++ = (ch))
+
+static char *number(char *buf, char *end, u64 num,
+		int base, int size, int precision, int type)
+{
+	/* we are called with base 8, 10 or 16, only, thus don't need "G..."  */
+	static const char digits[16] = "0123456789ABCDEF";
+
+	char tmp[66];
+	char sign;
+	char locase;
+	int need_pfx = ((type & SPECIAL) && base != 10);
+	int i;
+
+	/* locase = 0 or 0x20. ORing digits or letters with 'locase'
+	 * produces same digits or (maybe lowercased) letters */
+	locase = (type & SMALL);
+	if (type & LEFT)
+		type &= ~ZEROPAD;
+	sign = 0;
+	if (type & SIGN) {
+		if ((s64) num < 0) {
+			sign = '-';
+			num = -(s64) num;
+			size--;
+		} else if (type & PLUS) {
+			sign = '+';
+			size--;
+		} else if (type & SPACE) {
+			sign = ' ';
+			size--;
+		}
+	}
+	if (need_pfx) {
+		size--;
+		if (base == 16)
+			size--;
+	}
+
+	/* generate full string in tmp[], in reverse order */
+	i = 0;
+	if (num == 0)
+		tmp[i++] = '0';
+	/* Generic code, for any base:
+	else do {
+		tmp[i++] = (digits[do_div(num,base)] | locase);
+	} while (num != 0);
+	*/
+	else if (base != 10) { /* 8 or 16 */
+		int mask = base - 1;
+		int shift = 3;
+
+		if (base == 16)
+			shift = 4;
+
+		do {
+			tmp[i++] = (digits[((unsigned char)num) & mask]
+					| locase);
+			num >>= shift;
+		} while (num);
+	} else { /* base 10 */
+		i = put_dec(tmp, num) - tmp;
+	}
+
+	/* printing 100 using %2d gives "100", not "00" */
+	if (i > precision)
+		precision = i;
+	/* leading space padding */
+	size -= precision;
+	if (!(type & (ZEROPAD + LEFT))) {
+		while (--size >= 0)
+			ADDCH(buf, ' ');
+	}
+	/* sign */
+	if (sign)
+		ADDCH(buf, sign);
+	/* "0x" / "0" prefix */
+	if (need_pfx) {
+		ADDCH(buf, '0');
+		if (base == 16)
+			ADDCH(buf, 'X' | locase);
+	}
+	/* zero or space padding */
+	if (!(type & LEFT)) {
+		char c = (type & ZEROPAD) ? '0' : ' ';
+
+		while (--size >= 0)
+			ADDCH(buf, c);
+	}
+	/* hmm even more zero padding? */
+	while (i <= --precision)
+		ADDCH(buf, '0');
+	/* actual digits of result */
+	while (--i >= 0)
+		ADDCH(buf, tmp[i]);
+	/* trailing space padding */
+	while (--size >= 0)
+		ADDCH(buf, ' ');
+	return buf;
+}
 
 static char *string(char *buf, char *end, char *s, int field_width,
 		int precision, int flags)
@@ -350,6 +464,270 @@ static char *ip4_addr_string(char *buf, char *end, u8 *addr, int field_width,
 
 	return string(buf, end, ip4_addr, field_width, precision,
 		      flags & ~SPECIAL);
+}
+
+/*
+ * Show a '%p' thing.  A kernel extension is that the '%p' is followed
+ * by an extra set of alphanumeric characters that are extended format
+ * specifiers.
+ *
+ * Right now we handle:
+ *
+ * - 'M' For a 6-byte MAC address, it prints the address in the
+ *       usual colon-separated hex notation
+ * - 'I' [46] for IPv4/IPv6 addresses printed in the usual way (dot-separated
+ *       decimal for v4 and colon separated network-order 16 bit hex for v6)
+ * - 'i' [46] for 'raw' IPv4/IPv6 addresses, IPv6 omits the colons, IPv4 is
+ *       currently the same
+ *
+ * Note: The difference between 'S' and 'F' is that on ia64 and ppc64
+ * function pointers are really function descriptors, which contain a
+ * pointer to the real address.
+ */
+static char *pointer(const char *fmt, char *buf, char *end, void *ptr,
+		int field_width, int precision, int flags)
+{
+	switch (*fmt) {
+	case 'm':
+		flags |= SPECIAL;
+		/* Fallthrough */
+	case 'M':
+		return mac_address_string(buf, end, ptr, field_width,
+					  precision, flags);
+	case 'i':
+		flags |= SPECIAL;
+		/* Fallthrough */
+	case 'I':
+		if (fmt[1] == '6')
+			return ip6_addr_string(buf, end, ptr, field_width,
+					       precision, flags);
+		if (fmt[1] == '4')
+			return ip4_addr_string(buf, end, ptr, field_width,
+					       precision, flags);
+		flags &= ~SPECIAL;
+		break;
+	}
+	flags |= SMALL;
+	if (field_width == -1) {
+		field_width = 2*sizeof(void *);
+		flags |= ZEROPAD;
+	}
+	return number(buf, end, (unsigned long)ptr, 16, field_width,
+		      precision, flags);
+}
+
+static int vsnprintf_internal(char *buf, size_t size, const char *fmt,
+			      va_list args)
+{
+	u64 num;
+	int base;
+	char *str;
+
+	int flags;		/* flags to number() */
+
+	int field_width;	/* width of output field */
+	int precision;		/* min. # of digits for integers; max
+				   number of chars for from string */
+	int qualifier;		/* 'h', 'l', or 'L' for integer fields */
+				/* 'z' support added 23/7/1999 S.H.    */
+				/* 'z' changed to 'Z' --davidm 1/25/99 */
+				/* 't' added for ptrdiff_t */
+	char *end = buf + size;
+
+	str = buf;
+
+	for (; *fmt ; ++fmt) {
+		if (*fmt != '%') {
+			ADDCH(str, *fmt);
+			continue;
+		}
+
+		/* process flags */
+		flags = 0;
+repeat:
+			++fmt;		/* this also skips first '%' */
+			switch (*fmt) {
+			case '-':
+				flags |= LEFT;
+				goto repeat;
+			case '+':
+				flags |= PLUS;
+				goto repeat;
+			case ' ':
+				flags |= SPACE;
+				goto repeat;
+			case '#':
+				flags |= SPECIAL;
+				goto repeat;
+			case '0':
+				flags |= ZEROPAD;
+				goto repeat;
+			}
+
+		/* get field width */
+		field_width = -1;
+		if (is_digit(*fmt))
+			field_width = skip_atoi(&fmt);
+		else if (*fmt == '*') {
+			++fmt;
+			/* it's the next argument */
+			field_width = va_arg(args, int);
+			if (field_width < 0) {
+				field_width = -field_width;
+				flags |= LEFT;
+			}
+		}
+
+		/* get the precision */
+		precision = -1;
+		if (*fmt == '.') {
+			++fmt;
+			if (is_digit(*fmt))
+				precision = skip_atoi(&fmt);
+			else if (*fmt == '*') {
+				++fmt;
+				/* it's the next argument */
+				precision = va_arg(args, int);
+			}
+			if (precision < 0)
+				precision = 0;
+		}
+
+		/* get the conversion qualifier */
+		qualifier = -1;
+		if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' ||
+		    *fmt == 'Z' || *fmt == 'z' || *fmt == 't') {
+			qualifier = *fmt;
+			++fmt;
+			if (qualifier == 'l' && *fmt == 'l') {
+				qualifier = 'L';
+				++fmt;
+			}
+		}
+
+		/* default base */
+		base = 10;
+
+		switch (*fmt) {
+		case 'c':
+			if (!(flags & LEFT)) {
+				while (--field_width > 0)
+					ADDCH(str, ' ');
+			}
+			ADDCH(str, (unsigned char) va_arg(args, int));
+			while (--field_width > 0)
+				ADDCH(str, ' ');
+			continue;
+
+		case 's':
+			str = string(str, end, va_arg(args, char *),
+				     field_width, precision, flags);
+			continue;
+
+		case 'p':
+			str = pointer(fmt + 1, str, end,
+					va_arg(args, void *),
+					field_width, precision, flags);
+			/* Skip all alphanumeric pointer suffixes */
+			while (isalnum(fmt[1]))
+				fmt++;
+			continue;
+
+		case 'n':
+			if (qualifier == 'l') {
+				long *ip = va_arg(args, long *);
+				*ip = (str - buf);
+			} else {
+				int *ip = va_arg(args, int *);
+				*ip = (str - buf);
+			}
+			continue;
+
+		case '%':
+			ADDCH(str, '%');
+			continue;
+
+		/* integer number formats - set up the flags and "break" */
+		case 'o':
+			base = 8;
+			break;
+
+		case 'x':
+			flags |= SMALL;
+		case 'X':
+			base = 16;
+			break;
+
+		case 'd':
+		case 'i':
+			flags |= SIGN;
+		case 'u':
+			break;
+
+		default:
+			ADDCH(str, '%');
+			if (*fmt)
+				ADDCH(str, *fmt);
+			else
+				--fmt;
+			continue;
+		}
+		if (qualifier == 'L')  /* "quad" for 64 bit variables */
+			num = va_arg(args, unsigned long long);
+		else if (qualifier == 'l') {
+			num = va_arg(args, unsigned long);
+			if (flags & SIGN)
+				num = (signed long) num;
+		} else if (qualifier == 'Z' || qualifier == 'z') {
+			num = va_arg(args, size_t);
+		} else if (qualifier == 't') {
+			num = va_arg(args, ptrdiff_t);
+		} else if (qualifier == 'h') {
+			num = (unsigned short) va_arg(args, int);
+			if (flags & SIGN)
+				num = (signed short) num;
+		} else {
+			num = va_arg(args, unsigned int);
+			if (flags & SIGN)
+				num = (signed int) num;
+		}
+		str = number(str, end, num, base, field_width, precision,
+			     flags);
+	}
+
+	*str = '\0';
+
+	/* the trailing null byte doesn't count towards the total */
+	return str - buf;
+}
+
+/**
+ * Format a string and place it in a buffer (va_list version)
+ *
+ * @param buf	The buffer to place the result into
+ * @param fmt	The format string to use
+ * @param args	Arguments for the format string
+ *
+ * The function returns the number of characters written
+ * into @buf. Use vsnprintf() or vscnprintf() in order to avoid
+ * buffer overflows.
+ *
+ * If you're not already dealing with a va_list consider using sprintf().
+ */
+int vsprintf(char *buf, const char *fmt, va_list args)
+{
+	return vsnprintf_internal(buf, INT_MAX, fmt, args);
+}
+
+int sprintf(char *buf, const char *fmt, ...)
+{
+	va_list args;
+	int i;
+
+	va_start(args, fmt);
+	i = vsprintf(buf, fmt, args);
+	va_end(args);
+	return i;
 }
 
 char *simple_itoa(ulong i)

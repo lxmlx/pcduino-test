@@ -12,6 +12,11 @@ typedef unsigned short __u16;
 typedef __signed__ int __s32;
 typedef unsigned int __u32;
 
+#if defined(__GNUC__)
+__extension__ typedef __signed__ long long __s64;
+__extension__ typedef unsigned long long __u64;
+#endif
+
 typedef signed char s8;
 typedef unsigned char u8;
 
@@ -35,6 +40,10 @@ typedef unsigned long phys_size_t;
 
 #ifndef __KERNEL_STRICT_NAMES
 
+#define __bitwise
+typedef __u32 __bitwise __le32;
+typedef __u32 __bitwise __be32;
+
 /* bsd */
 typedef unsigned char		u_char;
 typedef unsigned short		u_short;
@@ -46,6 +55,11 @@ typedef unsigned char		unchar;
 typedef unsigned short		ushort;
 typedef unsigned int		uint;
 typedef unsigned long		ulong;
+
+#ifndef _PTRDIFF_T
+#define _PTRDIFF_T
+typedef __kernel_ptrdiff_t	ptrdiff_t;
+#endif
 
 #ifndef __BIT_TYPES_DEFINED__
 #define __BIT_TYPES_DEFINED__
@@ -62,6 +76,12 @@ typedef		__s32		int32_t;
 typedef		__u8		uint8_t;
 typedef		__u16		uint16_t;
 typedef		__u32		uint32_t;
+
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+typedef		__u64		uint64_t;
+typedef		__u64		u_int64_t;
+typedef		__s64		int64_t;
+#endif
 
 #endif /* __KERNEL_STRICT_NAMES */
 

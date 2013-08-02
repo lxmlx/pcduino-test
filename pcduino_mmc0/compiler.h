@@ -8,4 +8,9 @@
 # define le32_to_cpu(x)		(x)
 # define le64_to_cpu(x)		(x)
 
+# define __force
+
+/* Type for `void *' pointers. */
+typedef unsigned long int uintptr_t;
+
 #endif

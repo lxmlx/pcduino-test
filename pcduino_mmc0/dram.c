@@ -3,6 +3,7 @@
 #include "common.h"
 #include "timer.h"
 #include "clock.h"
+#include "syslib.h"
 
 static void mctl_ddr3_reset(void)
 {

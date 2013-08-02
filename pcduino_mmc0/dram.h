@@ -84,5 +84,6 @@ struct dram_para {
 #define DRAM_CTRL_SELECT_MAGIC	0x16237495
 
 int sunxi_dram_init(void);
+long get_ram_size(long *base, long maxsize);
 
 #endif /* _SUNXI_DRAM_H */

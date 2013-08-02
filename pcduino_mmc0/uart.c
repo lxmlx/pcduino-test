@@ -1,10 +1,12 @@
 #include "uart.h"
 #include "io.h"
 #include "types.h"
+#include "string.h"
+#include "common.h"
 
 void uart_init(void)
 {
-	while(!serial_in(UART_LSR(0)) & UART_LSR_TEMT);
+	while(!(serial_in(UART_LSR(0)) & UART_LSR_TEMT));
 	serial_out(CONFIG_SYS_NS16550_IER, UART_IER(0));
 	serial_out((UART_LCR_BKSE | UART_LCRVAL), UART_LCR(0));
 	serial_out(0, UART_DLL(0));
@@ -38,4 +40,23 @@ void uart_puts(char *str)
 {
 	while(*str)
 		uart_putchar(*str++);
+}
+
+int printf(const char *fmt, ...)
+{
+	va_list args;
+	uint i;
+	char printbuffer[CONFIG_SYS_PBSIZE];
+
+	va_start(args, fmt);
+
+	/* For this to work, printbuffer must be larger than
+	 * anything we ever want to print.
+	 */
+	i = vscnprintf(printbuffer, sizeof(printbuffer), fmt, args);
+	va_end(args);
+
+	/* Print the string */
+	uart_puts(printbuffer);
+	return i;
 }

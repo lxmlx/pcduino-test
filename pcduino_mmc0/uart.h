@@ -149,5 +149,7 @@
 void uart_init(void);
 char uart_getchar(void);
 void uart_putchar(char c);
+void uart_puts(char *str);
+int printf(const char *fmt, ...);
 
 #endif

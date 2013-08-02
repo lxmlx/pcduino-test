@@ -3,6 +3,7 @@
 #include "cpu.h"
 #include "watchdog.h"
 #include "io.h"
+#include "syslib.h"
 
 #define WDT_CTRL_RESTART	(0x1 << 0)
 #define WDT_CTRL_KEY		(0x0a57 << 1)
@@ -42,21 +43,21 @@ const unsigned int wdt_timeout_map[] = {
 
 void watchdog_reset(void)
 {
-	static const struct sunxi_wdog *wdog =
+	static struct sunxi_wdog *wdog =
 		&((struct sunxi_timer_reg *)SUNXI_TIMER_BASE)->wdog;
 
-	writel(WDT_CTRL_KEY | WDT_CTRL_RESTART, &wdog->ctl);
+	sr32(&wdog->ctl, 0, 1, WDT_CTRL_RESTART);
 }
 
 void watchdog_set(int timeout)
 {
-	static struct sunxi_wdog *const wdog =
+	static struct sunxi_wdog *wdog =
 		&((struct sunxi_timer_reg *)SUNXI_TIMER_BASE)->wdog;
 	u32 reg_val;
 
 	/* Set timeout, reset & enable */
 	if (timeout >= 0) {
-		reg_val |= WDT_MODE_TIMEOUT(timeout) | WDT_MODE_RESET_EN |
+		reg_val = WDT_MODE_TIMEOUT(timeout) | WDT_MODE_RESET_EN |
 			   WDT_MODE_EN;
 		writel(reg_val, &wdog->mode);
 	} else {

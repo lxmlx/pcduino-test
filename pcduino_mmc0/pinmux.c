@@ -2,6 +2,7 @@
 #include "io.h"
 #include "gpio.h"
 #include "cpu.h"
+#include "syslib.h"
 
 int sunxi_gpio_set_cfgpin(u32 pin, u32 val)
 {
@@ -74,7 +75,6 @@ int sunxi_gpio_set_drv(u32 pin, u32 val)
 
 int sunxi_gpio_set_dat_bit(u32 pin, u32 val)
 {
-	u32 dat;
 	u32 bank = GPIO_BANK(pin);
 	u32 offset = GPIO_DAT_OFFSET(pin);
 	struct sunxi_gpio *pio =

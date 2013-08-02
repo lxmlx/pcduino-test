@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-/* General purpose timer */
+/* General purpose timer (16 bytes)*/
 struct sunxi_timer {
 	u32 ctl;
 	u32 inter;
@@ -11,7 +11,7 @@ struct sunxi_timer {
 	u8 res[4];/* baoliu? weile tianchong wei? */
 };
 
-/* Audio video sync*/
+/* Audio video sync (16 bytes) */
 struct sunxi_avs {
 	u32 ctl;		/* 0x80 */
 	u32 cnt0;		/* 0x84 */
@@ -19,27 +19,27 @@ struct sunxi_avs {
 	u32 div;		/* 0x8c */
 };
 
-/* 64 bit counter */
+/* 64 bit counter (12 bytes) */
 struct sunxi_64cnt {
 	u32 ctl;		/* 0xa0 */
 	u32 lo;			/* 0xa4 */
 	u32 hi;			/* 0xa8 */
 };
 
-/* Watchdog */
+/* Watchdog (8 bytes) */
 struct sunxi_wdog {
 	u32 ctl;		/* 0x90 */
 	u32 mode;		/* 0x94 */
 };
 
-/* Rtc */
+/* Rtc  (12 bytes) */
 struct sunxi_rtc {
 	u32 ctl;		/* 0x100 */
 	u32 yymmdd;		/* 0x104 */
 	u32 hhmmss;		/* 0x108 */
 };
 
-/* Alarm */
+/* Alarm (20 bytes) */
 struct sunxi_alarm {
 	u32 ddhhmmss;		/* 0x10c */
 	u32 hhmmss;		/* 0x110 */
@@ -48,7 +48,7 @@ struct sunxi_alarm {
 	u32 irqsta;		/* 0x11c */
 };
 
-/* Timer general purpose register */
+/* Timer general purpose register (4 bytes) */
 struct sunxi_tgp {
 	u32 tgpd;
 };
@@ -72,8 +72,27 @@ struct sunxi_timer_reg {
 };
 
 int timer_init_all(void);
-/* 既然延时不可能是负数，那么算法里面，就都用无符号吧。 */
-void __udelay(u32 usec);
 u32 read_timer(int idx);
+void timer0_cndelay(u32 cnt);
+void timer1_cndelay(u32 cnt);
+void timer2_cndelay(u32 cnt);
+void timer4_cndelay(u32 cnt);
+void timer5_cndelay(u32 cnt);
+void timer0_udelay(u32 usec);
+void timer1_udelay(u32 usec);
+void timer2_udelay(u32 usec);
+void timer4_mdelay(u32 msec);
+void timer5_mdelay(u32 msec);
+void mdelay(u32 usec);
+u32 get_mtimer(void);
+
+void avscnt0_cndelay(u32 cnt);
+void avscnt1_cndelay(u32 cnt);
+u32 read_avs(int idx);
+
+ulong read_cnt64l(void);
+ulong read_cnt64h(void);
+
+
 
 #endif

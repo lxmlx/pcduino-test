@@ -4,6 +4,7 @@
  */
 
 #include "gpio.h"
+#include "syslib.h"
 
 int led_init(void)
 {

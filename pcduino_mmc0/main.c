@@ -9,49 +9,45 @@
 #include "dram.h"
 #include "io.h"
 #include "string.h"
-#include "sunxi_mmc.h"
+#include "syslib.h"
 #include "mmc.h"
 
-void test_dram()
+void test_dram(void)
 {
 	ulong data;
 
-	data = 0;
-	writel(5000,0x80000000-4);
-	data = readl(0x80000000-4);
-	uart_puts("delay: ");
-	uart_puts(simple_itoa(data));
-	uart_puts(" ms\n");
-	__udelay(data);
-
-	data = 0;
-	writel(5000,0x80000000);
-	data = readl(0x80000000);
-	uart_puts("delay: ");
-	uart_puts(simple_itoa(data));
-	uart_puts(" ms\n");
-	__udelay(data);
-
-	data = 0;
-	writel(5000,0xc0000000-4);
+	data = 3000;
+	writel(data, 0x80000000-4);
+	printf("data: %ums\n", data);
 	data = readl(0xc0000000-4);
-	uart_puts("delay: ");
-	uart_puts(simple_itoa(data));
-	uart_puts(" ms\n");
-	__udelay(data);
+	printf("delay: %ums\n", data);
+	mdelay(data);
 
-	data = 0;
-	writel(5000,0xc0000000);
+	data = 4000;
+	writel(data, 0xc0000000-4);
+	printf("data: %ums\n", data);
+	data = readl(0x80000000-4);
+	printf("delay: %ums\n", data);
+	mdelay(data);
+
+	data = 5000;
+	writel(data, 0x80000000);
+	printf("data: %ums\n", data);
 	data = readl(0xc0000000);
-	uart_puts("delay: ");
-	uart_puts(simple_itoa(data));
-	uart_puts(" ms\n");
-	__udelay(data);
+	printf("delay: %ums\n", data);
+	mdelay(data);
+
+	data = 6000;
+	writel(data, 0xc0000000);
+	printf("data: %ums\n", data);
+	data = readl(0x80000000);
+	printf("delay: %ums\n", data);
+	mdelay(data);
 
 	uart_puts("dram ok!\n");
 }
 
-void test_uart()
+void test_uart(void)
 {
 	uart_puts("uart ok!\n");
 }
@@ -126,7 +122,6 @@ void test_timer(int times)
 		timer5_mdelay(100);
 	};
 	uart_puts("timer4,5 ok!\n");
-/* timer5 seems don't work corect */
 	cur = 0;
 	//while (cur++ < times) {
 	while(0) {
@@ -137,24 +132,32 @@ void test_timer(int times)
 		led_rx_off();
 		avscnt1_cndelay(100);
 	}
-	//uart_puts("avs0,1 ok!\n");
+	uart_puts("avs0,1 ok!\n");
 /* avs seems not work corect */
 
-
+/*	cur = 0;
+	led_rx_on();
+	led_tx_on();
+	watchdog_set(10);
+	mdelay(10000);
+	uart_puts("watchdog seems not well !\n");
+*/
+	uart_puts("64 bit counter: ");
+	uart_puts("high: ");
+	uart_puts(simple_itoa(read_cnt64h()));
+	uart_puts(" low: ");
+	uart_puts(simple_itoa(read_cnt64l()));
+	uart_puts("\n");
+	uart_puts("64 bit counter: ");
+	uart_puts("high: ");
+	uart_puts(simple_itoa(read_cnt64h()));
+	uart_puts(" low: ");
+	uart_puts(simple_itoa(read_cnt64l()));
+	uart_puts("\n");
 /*****************************/
 	uart_puts("turn off the led.\n");
 	led_tx_off();
 	led_rx_off();
-}
-
-void test_sdcard()
-{
-	ulong data = 0;
-	char *dst = (char *)0x40000000;
-
-	mmc_bread(0, 16, 1, dst);
-	readl(dst);
-	uart_puts(simple_itoa(data));	
 }
 
 int main(void)
@@ -169,7 +172,7 @@ int main(void)
 	test_uart();
 	test_timer(10); /* fanle? */
 	test_dram();
-	//test_sdcard();
+	mmc_test();
 	uart_puts("now go hang\n");
 	led_hang(10000000);
 	return 0;

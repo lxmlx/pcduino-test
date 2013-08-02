@@ -2,6 +2,7 @@
 #include "common.h"
 #include "types.h"
 #include "io.h"
+#include "syslib.h"
 
 static void clock_init_safe(void)
 {
@@ -48,7 +49,6 @@ unsigned int clock_get_pll5(void)
 	int p = 1 << ((rval >> 16) & 3);
 	return 24000000 * n * k / p;
 }
-
 
 int clock_twi_onoff(int port, int state)
 {
