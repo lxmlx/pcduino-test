@@ -45,7 +45,7 @@ void watchdog_reset(void)
 	static const struct sunxi_wdog *wdog =
 		&((struct sunxi_timer_reg *)SUNXI_TIMER_BASE)->wdog;
 
-	writel(WDT_CTRL_KEY | WDT_CTRL_RESTART, &wdog->ctl);
+	sr32(&wdog->ctl, 0, 1, WDT_CTRL_RESTART);
 }
 
 void watchdog_set(int timeout)

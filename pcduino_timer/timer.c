@@ -67,6 +67,15 @@
 #define read_avscnt0		(readl(&timer_base->avs.cnt0))
 #define read_avscnt1		(readl(&timer_base->avs.cnt1))
 
+/* 64-bit counter field */
+#define CNT64_CLK_SRC_OSC24M	(0 << 2)
+#define CNT64_CLK_SRC_PLL6DIV6	(1 << 2)
+#define CNT64_RL_EN		(1 << 1)
+#define CNT64_CLR_EN		(1 << 0)
+
+#define read_cnt64lo		(readl(&timer_base->cnt64.lo))
+#define read_cnt64hi		(readl(&timer_base->cnt64.hi))
+
 static struct sunxi_timer_reg *timer_base =
 	(struct sunxi_timer_reg *)SUNXI_TIMER_BASE;
 
@@ -326,7 +335,7 @@ void timer5_mdelay(u32 msec)
 	return;
 }
 
-void __udelay(u32 msec)
+void mdelay(u32 msec)
 {
 	while(msec--)
 		timer0_udelay(1000);
@@ -398,7 +407,19 @@ int timer_init_wdog(void)
 
 int timer_init_cnt64(void)
 {
+	sr32(&timer_base->cnt64.ctl, 2, 1, 0);
+	sr32(&timer_base->cnt64.ctl, 0, 1, 1);
 	return 0;
+}
+
+ulong read_cnt64l(void)
+{
+	return read_cnt64lo;
+}
+
+ulong read_cnt64h(void)
+{
+	return read_cnt64hi;
 }
 
 int timer_init_rtc(void)
@@ -420,4 +441,5 @@ int timer_init_all(void)
 	timer_init_timer4();
 	timer_init_timer5();
 	timer_init_avs();
+	timer_init_cnt64();
 }

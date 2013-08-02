@@ -15,36 +15,36 @@ void test_dram()
 	ulong data;
 
 	data = 0;
-	writel(5000,0x80000000-4);
+	writel(5000, 0x80000000-4);
 	data = readl(0x80000000-4);
 	uart_puts("delay: ");
 	uart_puts(simple_itoa(data));
 	uart_puts(" ms\n");
-	__udelay(data);
+	mdelay(data);
 
 	data = 0;
-	writel(5000,0x80000000);
+	writel(5000, 0x80000000);
 	data = readl(0x80000000);
 	uart_puts("delay: ");
 	uart_puts(simple_itoa(data));
 	uart_puts(" ms\n");
-	__udelay(data);
+	mdelay(data);
 
 	data = 0;
-	writel(5000,0xc0000000-4);
+	writel(5000, 0xc0000000-4);
 	data = readl(0xc0000000-4);
 	uart_puts("delay: ");
 	uart_puts(simple_itoa(data));
 	uart_puts(" ms\n");
-	__udelay(data);
+	mdelay(data);
 
 	data = 0;
-	writel(5000,0xc0000000);
+	writel(5000, 0xc0000000);
 	data = readl(0xc0000000);
 	uart_puts("delay: ");
 	uart_puts(simple_itoa(data));
 	uart_puts(" ms\n");
-	__udelay(data);
+	mdelay(data);
 
 	uart_puts("dram ok!\n");
 }
@@ -125,8 +125,8 @@ void test_timer(int times)
 	};
 	uart_puts("timer4,5 ok!\n");
 	cur = 0;
-	while (cur++ < times) {
-	//while(0) {
+	//while (cur++ < times) {
+	while(0) {
 		led_tx_off();
 		led_rx_on();
 		avscnt0_cndelay(100);
@@ -137,7 +137,25 @@ void test_timer(int times)
 	uart_puts("avs0,1 ok!\n");
 /* avs seems not work corect */
 
-
+/*	cur = 0;
+	led_rx_on();
+	led_tx_on();
+	watchdog_set(10);
+	mdelay(10000);
+	uart_puts("watchdog seems not well !\n");
+*/
+	uart_puts("64 bit counter: ");
+	uart_puts("high: ");
+	uart_puts(simple_itoa(read_cnt64h()));
+	uart_puts(" low: ");
+	uart_puts(simple_itoa(read_cnt64l()));
+	uart_puts("\n");
+	uart_puts("64 bit counter: ");
+	uart_puts("high: ");
+	uart_puts(simple_itoa(read_cnt64h()));
+	uart_puts(" low: ");
+	uart_puts(simple_itoa(read_cnt64l()));
+	uart_puts("\n");
 /*****************************/
 	uart_puts("turn off the led.\n");
 	led_tx_off();

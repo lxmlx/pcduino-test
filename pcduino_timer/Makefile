@@ -27,7 +27,7 @@ timer.bin: $(OBJS-y) u-boot-spl.lds
 	arm-none-linux-gnueabi-objdump -D timer_elf > timer.dis
 
 %.o: %.S
-	$(CC) -nostdlib -c $< -o $@
+	$(CC) -nostdlib -Os -c $< -o $@
 
 %.o: %.c
 	$(CC) -nostdlib -Os -c $< -o $@
