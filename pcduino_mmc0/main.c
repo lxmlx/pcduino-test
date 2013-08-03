@@ -22,143 +22,50 @@ void test_dram(void)
 
 	data = 3000;
 	writel(data, 0x80000000-4);
-	printf("data: %ums\n", data);
+	printf("write: %u", data);
 	data = readl(0xc0000000-4);
-	printf("delay: %ums\n", data);
-	mdelay(data);
+	printf("  read: %u\n", data);
 
 	data = 4000;
 	writel(data, 0xc0000000-4);
-	printf("data: %ums\n", data);
+	printf("write: %u", data);
 	data = readl(0x80000000-4);
-	printf("delay: %ums\n", data);
-	mdelay(data);
+	printf("  read: %u\n", data);
 
 	data = 5000;
 	writel(data, 0x80000000);
-	printf("data: %ums\n", data);
+	printf("write: %u", data);
 	data = readl(0xc0000000);
-	printf("delay: %ums\n", data);
-	mdelay(data);
-
+	printf("  read: %u\n", data);
 	data = 6000;
 	writel(data, 0xc0000000);
-	printf("data: %ums\n", data);
-	data = readl(0x80000000);
-	printf("delay: %ums\n", data);
-	mdelay(data);
+	printf("write: %u", data);
+	data = readl(0x40000000);
+	printf("  read: %u\n", data);
 
 	uart_puts("dram ok!\n");
-}
-
-void test_uart(void)
-{
-	uart_puts("uart ok!\n");
 }
 
 /* shan duoshao weimiao zuixiao dayu 200000 */
 void test_timer(int times)
 {
-	int cur;
+	u32 cur = 0;
+	u32 start;
+	u32 tmo = 1000;
+	u32 tmp = 0;
 
 	led_init();
-
-	cur = 0;
-	while (cur++ < times) {
-	//while(0) {	
+	while (cur++ < times) {	
+		start = get_mtimer(0);
 		led_tx_off();
 		led_rx_on();
-		timer0_cndelay(2400000); /* 24 * 1000 * 1000 */
+		while ((tmp = get_mtimer(start)) < tmo);
 		led_tx_on();
 		led_rx_off();
-		timer1_cndelay(600000); /* 24 * 1000 * 1000 / 4 */
+		mdelay(1000);
 	};
-	cur = 0;
-	while (cur++ < times) {
-	//while(0) {	
-		led_tx_off();
-		led_rx_on();
-		timer0_udelay(100000);
-		led_tx_on();
-		led_rx_off();
-		timer1_udelay(100000);
-	};
-	uart_puts("timer0,1 ok!\n");
-	cur = 0;
-	while (cur++ < times) {
-	//while(0) {
-		led_tx_off();
-		led_rx_on();
-		timer2_cndelay(300000); /* 24 * 1000 * 1000 / 8 */
-		led_tx_on();
-		led_rx_off();
-		timer4_cndelay(150000); /* 24 * 1000 * 1000 / 16 */
-	};
-	cur = 0;
-	while (cur++ < times) {
-	//while(0) {
-		led_tx_off();
-		led_rx_on();
-		timer2_udelay(100000);
-		led_tx_on();
-		led_rx_off();
-		timer4_mdelay(100);
-	};
-	uart_puts("timer2,4 ok!\n");
-	cur = 0;
-	while (cur++ < times) {
-	//while(0) {
-		led_tx_off();
-		led_rx_on();
-		timer4_cndelay(150000);
-		led_tx_on();
-		led_rx_off();
-		timer5_cndelay(37500); 
-	};
-	cur = 0;
-	while (cur++ < times) {
-	//while(0) {
-		led_tx_off();
-		led_rx_on();
-		timer4_mdelay(100);
-		led_tx_on();
-		led_rx_off();
-		timer5_mdelay(100);
-	};
-	uart_puts("timer4,5 ok!\n");
-	cur = 0;
-	//while (cur++ < times) {
-	while(0) {
-		led_tx_off();
-		led_rx_on();
-		avscnt0_cndelay(100);
-		led_tx_on();
-		led_rx_off();
-		avscnt1_cndelay(100);
-	}
-	uart_puts("avs0,1 ok!\n");
-/* avs seems not work corect */
-
-/*	cur = 0;
-	led_rx_on();
-	led_tx_on();
-	watchdog_set(10);
-	mdelay(10000);
-	uart_puts("watchdog seems not well !\n");
-*/
-	uart_puts("64 bit counter: ");
-	uart_puts("high: ");
-	uart_puts(simple_itoa(read_cnt64h()));
-	uart_puts(" low: ");
-	uart_puts(simple_itoa(read_cnt64l()));
-	uart_puts("\n");
-	uart_puts("64 bit counter: ");
-	uart_puts("high: ");
-	uart_puts(simple_itoa(read_cnt64h()));
-	uart_puts(" low: ");
-	uart_puts(simple_itoa(read_cnt64l()));
-	uart_puts("\n");
-/*****************************/
+	uart_puts("timer ok!\n");
+	/*****************************/
 	uart_puts("turn off the led.\n");
 	led_tx_off();
 	led_rx_off();
@@ -171,9 +78,8 @@ int main(void)
 	watchdog_init();
 	clock_init();
 	gpio_init();
-	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
 	uart_init();
-	timer_init_all();
+	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
 	sunxi_dram_init();
 	power_failed |= axp209_init();
 	power_failed |= axp209_set_dcdc2(1400);
@@ -185,11 +91,11 @@ int main(void)
 		clock_set_pll1(1008000000);
 	else
 		printf("Failed to set core voltage!. Can't set CPU frequency\n");
+	timer_init_all();
 	sunxi_mmc_init(0);
 
-	test_uart();
-	test_timer(10); /* fanle? */
-	test_dram();
+	//test_timer(10); /* fanle? */
+	//test_dram();
 	spl_mmc_load_image();
 	uart_puts("now go hang\n");
 	led_hang(10000000);

@@ -72,27 +72,7 @@ struct sunxi_timer_reg {
 };
 
 int timer_init_all(void);
-u32 read_timer(int idx);
-void timer0_cndelay(u32 cnt);
-void timer1_cndelay(u32 cnt);
-void timer2_cndelay(u32 cnt);
-void timer4_cndelay(u32 cnt);
-void timer5_cndelay(u32 cnt);
-void timer0_udelay(u32 usec);
-void timer1_udelay(u32 usec);
-void timer2_udelay(u32 usec);
-void timer4_mdelay(u32 msec);
-void timer5_mdelay(u32 msec);
-void mdelay(u32 usec);
-u32 get_mtimer(void);
-
-void avscnt0_cndelay(u32 cnt);
-void avscnt1_cndelay(u32 cnt);
-u32 read_avs(int idx);
-
-ulong read_cnt64l(void);
-ulong read_cnt64h(void);
-
-
+void mdelay(u32 msec);
+u32 get_mtimer(u32 base);
 
 #endif

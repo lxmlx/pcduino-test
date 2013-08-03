@@ -13,7 +13,12 @@
 #include "little_endian.h"
 #include "common.h"
 
-#define debug(fmt, args...) printf(fmt, ##args)
+//#define debug(fmt, args...) printf(fmt, ##args)
+#define debug(fmt, args...)
+
+#ifndef CONFIG_SYS_MMC_MAX_BLK_COUNT
+#define CONFIG_SYS_MMC_MAX_BLK_COUNT 65535
+#endif
 
 static void dumphex32(char *name, char *base, int len)
 {
@@ -483,10 +488,14 @@ int sunxi_mmc_init(int sdc_no)
 
 	mmc_resource_init(sdc_no);
 	mmc_clk_io_on(sdc_no);
+	if (!mmc->b_max)
+		mmc->b_max = CONFIG_SYS_MMC_MAX_BLK_COUNT;
 
 	/* other init */
-	err = mmc_start_init(mmc);
-	printf("\nmmc_start_init return value: %d\n", err);
+	if (mmc->preinit) {
+		err = mmc_start_init(mmc);
+		debug("\nmmc_start_init return value: %d\n", err);
+	}
 
 	err = mmc_init(mmc);
 	if (err) {
@@ -680,12 +689,12 @@ static int mmc_complete_op_cond(struct mmc *mmc)
 	int err;
 
 	mmc->op_cond_pending = 0;
-	start = get_mtimer();
+	start = get_mtimer(0);
 	do {
 		err = mmc_send_op_cond_iter(mmc, &cmd, 1);
 		if (err)
 			return err;
-		if ((get_mtimer() - start) > timeout)
+		if (get_mtimer(start) > timeout)
 			return UNUSABLE_ERR;
 		mdelay(1);
 	} while (!(mmc->op_cond_response & OCR_BUSY));
@@ -1398,13 +1407,13 @@ static int mmc_complete_init(struct mmc *mmc)
 
 	if (mmc->op_cond_pending) {
 		err = mmc_complete_op_cond(mmc);
-		printf("mmc_complete_init->mmc_complete_op_cond return val: %d\n",
+		debug("mmc_complete_init->mmc_complete_op_cond return val: %d\n",
 			 err);
 	}
 
 	if (!err) {
 		err = mmc_startup(mmc);
-		printf("mmc_complete_init->mmc_startup return val: %d\n", err);
+		debug("mmc_complete_init->mmc_startup return val: %d\n", err);
 	}
 
 	if (err)
@@ -1423,12 +1432,12 @@ static int mmc_init(struct mmc *mmc)
 	if (mmc->has_init)
 		return 0;
 	if (!mmc->init_in_progress) {
-		printf("mmc_init->mmc_start_init\n");
+		debug("mmc_init->mmc_start_init\n");
 		err = mmc_start_init(mmc);
 	}
 
 	if (!err || err == IN_PROGRESS) {
-		printf("mmc_init->mmc_complete_init\n");
+		debug("mmc_init->mmc_complete_init\n");
 		err = mmc_complete_init(mmc);
 	}
 	return err;

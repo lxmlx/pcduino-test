@@ -14,6 +14,7 @@ int raise(int signum);
 #define PHYS_SDRAM_1			CONFIG_SYS_SDRAM_BASE
 
 #define CONFIG_SYS_TEXT_BASE		0x4A000000
+#define CONFIG_SYS_MONITOR_LEN		(512 << 10)	/* 512 KB */
 
 #define CONFIG_SYS_HZ			1000
 

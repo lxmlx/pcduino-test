@@ -4,7 +4,8 @@ mmc0s.bin:mmc0.bin
 CC=arm-none-linux-gnueabi-gcc
 PLATFORM_LIBGCC := -L $(shell dirname `$(CC) -print-libgcc-file-name`) -lgcc
 gccincdir := $(shell $(CC) -print-file-name=include)
-CFLAGS := -Os -Wstrict-prototypes -fstack-usage -Wall -ffreestanding -nostdinc -isystem $(gccincdir) 
+CFLAGS := -Os -Wstrict-prototypes -Wall -ffreestanding -nostdinc \
+		-isystem $(gccincdir) 
 
 
 OBJS-y += start.o

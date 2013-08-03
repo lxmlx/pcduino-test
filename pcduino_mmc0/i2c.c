@@ -6,7 +6,11 @@
 #include "common.h"
 #include "uart.h"
 
+#if 0
 #define debug(fmt, args...) printf(fmt, ##args)
+#else
+#define debug(fmt, args...)
+#endif
 
 static struct i2c __attribute__ ((section(".data"))) *i2c_base =
 	(struct i2c *)0x1c2ac00;

@@ -3,7 +3,6 @@
 #include "timer.h"
 #include "cpu.h"
 #include "types.h"
-#include "global_data.h"
 #include "common.h"
 #include "string.h"
 #include "syslib.h"
@@ -336,11 +335,15 @@ void timer5_mdelay(u32 msec)
 	return;
 }
 
-u32 get_mtimer(void)
+u32 get_mtimer(u32 base)
 {
-	u32 divisor = TIMER5_CLOCK / 1000;
-	u32 now = READ_TIMER(5) / divisor;
-	return now;
+	u32 divisor = TIMER5_CLOCK / 1000; /* per msec 375 */
+	u32 before = base * divisor;
+	u32 now = READ_TIMER(5);
+	if (now > before)
+		return (now - before) / divisor;
+	else
+		return (TIMER5_LOAD_VAL - before + now) / divisor;
 }
 
 void mdelay(u32 msec)

@@ -24,4 +24,6 @@ typedef struct image_header {
 	uint8_t		ih_name[IH_NMLEN];	/* Image Name		*/
 } image_header_t;
 
+#define IH_OS_U_BOOT		17	/* Firmware	*/
+
 #endif
