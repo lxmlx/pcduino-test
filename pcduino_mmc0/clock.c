@@ -3,6 +3,7 @@
 #include "types.h"
 #include "io.h"
 #include "syslib.h"
+#include "uart.h"
 
 static void clock_init_safe(void)
 {
@@ -89,3 +90,55 @@ struct {
 	{ PLL1_CFG(31, 1, 0, 0), 1488000000},
 	{ PLL1_CFG(31, 1, 0, 0), ~0},
 };
+
+void clock_set_pll1(int hz)
+{
+	int i = 0;
+	int axi, ahb, apb0;
+	struct sunxi_ccm_reg * const ccm =
+		(struct sunxi_ccm_reg *)SUNXI_CCM_BASE;
+
+	/* Find target frequency */
+	while (pll1_para[i].freq < hz)
+		i++;
+
+	hz = pll1_para[i].freq;
+
+	/* Calculate system clock divisors */
+	axi = RDIV(hz, 432000000);		/* Max 450MHz */
+	ahb = RDIV(hz/axi, 204000000);		/* Max 250MHz */
+	apb0 = 2;				/* Max 150MHz */
+
+	printf("CPU: %dHz, AXI/AHB/APB: %d/%d/%d\n", hz, axi, ahb, apb0);
+
+	/* Map divisors to register values */
+	axi = axi - 1;
+	if (ahb > 4)
+		ahb = 3;
+	else if (ahb > 2)
+		ahb = 2;
+	else if (ahb > 1)
+		ahb = 1;
+	else
+		ahb = 0;
+
+	apb0 = apb0 - 1;
+
+	/* Switch to 24MHz clock while changing PLL1 */
+	writel(AXI_DIV_1 << 0 | AHB_DIV_2 << 4 | APB0_DIV_1 << 8 |
+	       CPU_CLK_SRC_OSC24M << 16, &ccm->cpu_ahb_apb0_cfg);
+	sdelay(20);
+
+	/* Configure sys clock divisors */
+	writel(axi << 0 | ahb << 4 | apb0 << 8 | CPU_CLK_SRC_OSC24M << 16,
+	       &ccm->cpu_ahb_apb0_cfg);
+
+	/* Configure PLL1 at the desired frequency */
+	writel(pll1_para[i].pll1_cfg, &ccm->pll1_cfg);
+	sdelay(200);
+
+	/* Switch CPU to PLL1 */
+	writel(axi << 0 | ahb << 4 | apb0 << 8 | CPU_CLK_SRC_PLL1 << 16,
+	       &ccm->cpu_ahb_apb0_cfg);
+	sdelay(20);
+}

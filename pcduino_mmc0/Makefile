@@ -25,6 +25,9 @@ OBJS-y += vsprintf.o
 OBJS-y += ctype.o
 OBJS-y += div64.o
 OBJS-y += mmc.o
+OBJS-y += spl.o
+OBJS-y += i2c.o
+OBJS-y += axp209.o
 
 mmc0.bin: $(OBJS-y) u-boot-spl.lds
 	arm-none-linux-gnueabi-ld -T u-boot-spl.lds --gc-sections -Ttext 0x20 $(OBJS-y) $(PLATFORM_LIBGCC) -Map mmc0.map -o mmc0_elf

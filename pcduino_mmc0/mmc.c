@@ -91,6 +91,11 @@ struct sunxi_mmc_host {
 struct mmc mmc_dev[1];
 struct sunxi_mmc_host mmc_host[1];
 
+struct mmc * mmc_get_dev(int sdc_no)
+{
+	return &mmc_dev[sdc_no];
+}
+
 static int mmc_resource_init(int sdc_no)
 {
 	struct sunxi_mmc_host *mmchost = &mmc_host[sdc_no];
@@ -451,8 +456,12 @@ out:
 		return 0;
 }
 
+static int mmc_start_init(struct mmc *mmc);
+static int mmc_init(struct mmc *mmc);
+
 int sunxi_mmc_init(int sdc_no)
 {
+	unsigned long err;
 	struct mmc *mmc;
 
 	memset(&mmc_dev[sdc_no], 0, sizeof(struct mmc));
@@ -475,8 +484,15 @@ int sunxi_mmc_init(int sdc_no)
 	mmc_resource_init(sdc_no);
 	mmc_clk_io_on(sdc_no);
 
-	//mmc_register(mmc);
+	/* other init */
+	err = mmc_start_init(mmc);
+	printf("\nmmc_start_init return value: %d\n", err);
 
+	err = mmc_init(mmc);
+	if (err) {
+		printf("spl: mmc init failed: err - %d\n", err);
+		return err;
+	}
 	return 0;
 }
 
@@ -487,7 +503,7 @@ static void mmc_set_bus_width(struct mmc *mmc, uint width)
 	mmc->set_ios(mmc);
 }
 
-void mmc_set_clock(struct mmc *mmc, uint clock)
+static void mmc_set_clock(struct mmc *mmc, uint clock)
 {
 	if (clock > mmc->f_max)
 		clock = mmc->f_max;
@@ -634,7 +650,7 @@ static int mmc_send_op_cond_iter(struct mmc *mmc, struct mmc_cmd *cmd,
 	return 0;
 }
 
-int mmc_send_op_cond(struct mmc *mmc)
+static int mmc_send_op_cond(struct mmc *mmc)
 {
 	struct mmc_cmd cmd;
 	int err, i;
@@ -656,7 +672,7 @@ int mmc_send_op_cond(struct mmc *mmc)
 	return IN_PROGRESS;
 }
 
-int mmc_complete_op_cond(struct mmc *mmc)
+static int mmc_complete_op_cond(struct mmc *mmc)
 {
 	struct mmc_cmd cmd;
 	int timeout = 1000;
@@ -1004,6 +1020,8 @@ static int mmc_set_capacity(struct mmc *mmc, int part_num)
 		return -1;
 	}
 
+	mmc->lba = lldiv(mmc->capacity, mmc->read_bl_len);
+
 	return 0;
 }
 
@@ -1323,11 +1341,12 @@ static int mmc_startup(struct mmc *mmc)
 	mmc_set_clock(mmc, mmc->tran_speed);
 
 	/* fill in device description */
+	mmc->lba = lldiv(mmc->capacity, mmc->read_bl_len);
 
 	return 0;
 }
 
-int mmc_start_init(struct mmc *mmc)
+static int mmc_start_init(struct mmc *mmc)
 {
 	int err;
 
@@ -1397,7 +1416,7 @@ static int mmc_complete_init(struct mmc *mmc)
 	return err;
 }
 
-int mmc_init(struct mmc *mmc)
+static int mmc_init(struct mmc *mmc)
 {
 	int err = IN_PROGRESS;
 
@@ -1415,21 +1434,86 @@ int mmc_init(struct mmc *mmc)
 	return err;
 }
 
-void mmc_test(void)
+static int mmc_set_blocklen(struct mmc *mmc, int len)
 {
-	int err;
-	struct mmc *mmc = &mmc_dev[0];
-	//struct sunxi_mmc_host *mmchost = (struct sunxi_mmc_host *)mmc->priv;
+	struct mmc_cmd cmd;
 
-	err = mmc_start_init(mmc);
-	printf("\nmmc_start_init return value: %d\n", err);
+	cmd.cmdidx = MMC_CMD_SET_BLOCKLEN;
+	cmd.resp_type = MMC_RSP_R1;
+	cmd.cmdarg = len;
 
-	err = mmc_init(mmc);
-	if (err) {
-		printf("spl: mmc init failed: err - %d\n", err);
-		return;
+	return mmc_send_cmd(mmc, &cmd, NULL);
+}
+
+static int mmc_read_blocks(struct mmc *mmc, void *dst, ulong start,
+			   ulong blkcnt)
+{
+	struct mmc_cmd cmd;
+	struct mmc_data data;
+
+	if (blkcnt > 1)
+		cmd.cmdidx = MMC_CMD_READ_MULTIPLE_BLOCK;
+	else
+		cmd.cmdidx = MMC_CMD_READ_SINGLE_BLOCK;
+
+	if (mmc->high_capacity)
+		cmd.cmdarg = start;
+	else
+		cmd.cmdarg = start * mmc->read_bl_len;
+
+	cmd.resp_type = MMC_RSP_R1;
+
+	data.dest = dst;
+	data.blocks = blkcnt;
+	data.blocksize = mmc->read_bl_len;
+	data.flags = MMC_DATA_READ;
+
+	if (mmc_send_cmd(mmc, &cmd, &data))
+		return 0;
+
+	if (blkcnt > 1) {
+		cmd.cmdidx = MMC_CMD_STOP_TRANSMISSION;
+		cmd.cmdarg = 0;
+		cmd.resp_type = MMC_RSP_R1b;
+		if (mmc_send_cmd(mmc, &cmd, NULL)) {
+			printf("mmc fail to send stop cmd\n");
+			return 0;
+		}
 	}
 
-	
-	
+	return blkcnt;
+}
+
+ulong mmc_bread(int dev_num, ulong start, ulong blkcnt, void *dst)
+{
+	ulong cur, blocks_todo = blkcnt;
+	struct mmc *mmc = &mmc_dev[dev_num];
+
+	if (blkcnt == 0)
+		return 0;
+	if (!mmc)
+		return 0;
+	if ((start + blkcnt) > mmc->lba) {
+		printf("MMC: block number 0x%lx exceeds max(0x%lx)\n",
+			start + blkcnt, mmc->lba);
+		return 0;
+	}
+
+	if (mmc_set_blocklen(mmc, mmc->read_bl_len))
+		return 0;
+
+	do {
+		cur = (blocks_todo > mmc->b_max) ?  mmc->b_max : blocks_todo;
+		if(mmc_read_blocks(mmc, dst, start, cur) != cur)
+			return 0;
+		blocks_todo -= cur;
+		start += cur;
+		dst += cur * mmc->read_bl_len;
+		debug("cur: %ld, blocks_todo: %ld, start: %ld, dst: %lx\n",
+			cur, blocks_todo, start, dst);
+		dumpmmcreg(mmc_host[dev_num].reg);
+		mdelay(2000);
+	} while (blocks_todo > 0);
+
+	return blkcnt;
 }

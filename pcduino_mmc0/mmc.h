@@ -271,6 +271,7 @@ struct mmc {
 	uint read_bl_len;
 	uint write_bl_len;
 	uint erase_grp_size;
+	ulong lba;
 	u64 capacity;
 	u64 capacity_user;
 	u64 capacity_boot;
@@ -290,7 +291,9 @@ struct mmc {
 };
 
 #define mmc_host_is_spi(mmc)	((mmc)->host_caps & MMC_MODE_SPI)
-void mmc_test(void);
+
 int sunxi_mmc_init(int sdc_no);
+ulong mmc_bread(int dev_num, ulong start, ulong blkcnt, void *dst);
+struct mmc * mmc_get_dev(int sdc_no);
 
 #endif /* _SUNXI_MMC_H */

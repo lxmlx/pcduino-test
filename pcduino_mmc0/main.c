@@ -11,6 +11,10 @@
 #include "string.h"
 #include "syslib.h"
 #include "mmc.h"
+#include "spl.h"
+#include "common.h"
+#include "i2c.h"
+#include "axp209.h"
 
 void test_dram(void)
 {
@@ -162,17 +166,31 @@ void test_timer(int times)
 
 int main(void)
 {
+	int power_failed = 0;
+
 	watchdog_init();
 	clock_init();
 	gpio_init();
+	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
 	uart_init();
 	timer_init_all();
 	sunxi_dram_init();
+	power_failed |= axp209_init();
+	power_failed |= axp209_set_dcdc2(1400);
+	power_failed |= axp209_set_dcdc3(1250);
+	power_failed |= axp209_set_ldo2(3000);
+	power_failed |= axp209_set_ldo3(2800);
+	power_failed |= axp209_set_ldo4(2800);
+	if (!power_failed)
+		clock_set_pll1(1008000000);
+	else
+		printf("Failed to set core voltage!. Can't set CPU frequency\n");
 	sunxi_mmc_init(0);
+
 	test_uart();
 	test_timer(10); /* fanle? */
 	test_dram();
-	mmc_test();
+	spl_mmc_load_image();
 	uart_puts("now go hang\n");
 	led_hang(10000000);
 	return 0;

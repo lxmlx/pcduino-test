@@ -13,9 +13,14 @@ int raise(int signum);
 #define CONFIG_NR_DRAM_BANKS		1
 #define PHYS_SDRAM_1			CONFIG_SYS_SDRAM_BASE
 
+#define CONFIG_SYS_TEXT_BASE		0x4A000000
+
 #define CONFIG_SYS_HZ			1000
 
 #define CONFIG_SYS_PBSIZE	384	/* Print Buffer Size */
+
+#define CONFIG_SYS_I2C_SPEED		400000
+#define CONFIG_SYS_I2C_SLAVE		0x7f
 
 /* 32KB offset u-boot locate here */
 #define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR	64
@@ -55,6 +60,11 @@ int raise(int signum);
 	ALLOC_ALIGN_BUFFER_PAD(type, name, size, ARCH_DMA_MINALIGN, pad)
 #define ALLOC_CACHE_ALIGN_BUFFER(type, name, size)			\
 	ALLOC_ALIGN_BUFFER(type, name, size, ARCH_DMA_MINALIGN)
+
+typedef unsigned char		uchar;
+typedef volatile unsigned long	vu_long;
+typedef volatile unsigned short vu_short;
+typedef volatile unsigned char	vu_char;
 
 #endif /* _SUNXI_COMMON_CONFIG_H */
 
