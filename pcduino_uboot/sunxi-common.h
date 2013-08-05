@@ -45,4 +45,23 @@
 #define CONFIG_SYS_PBSIZE	384	/* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS	16	/* max number of command args */
 
+/* The stack sizes are set up in start.S using the settings below */
+#define CONFIG_STACKSIZE		(256 << 10)	/* 256 KB */
+
+/* FLASH and environment organization */
+
+#define CONFIG_SYS_NO_FLASH
+
+#define CONFIG_SYS_MONITOR_LEN		(512 << 10)	/* 512 KB */
+#define CONFIG_IDENT_STRING		"Allwinner Technology"
+
+#define CONFIG_ENV_OFFSET		(544 << 10) /* (8 + 24 + 512)KB */
+#define CONFIG_ENV_SIZE			(128 << 10)	/* 128KB */
+
+/*
+ * Size of malloc() pool
+ * 1MB = 0x100000, 0x100000 = 1024 * 1024
+ */
+#define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (1 << 20))
+
 #endif

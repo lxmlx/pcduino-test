@@ -30,7 +30,7 @@ ENTRY(_main)
 	ldr	r0, [r8, #GD_RELOC_OFF]		/* r0 = gd->reloc_off */
 	add	lr, lr, r0
 	ldr	r0, [r8, #GD_RELOCADDR]		/* r0 = gd->relocaddr */
-	//b	relocate_code
+	b	relocate_code
 here:
 
 /* Set up final (full) environment */
@@ -51,7 +51,7 @@ clbss_l:cmp	r0, r1			/* while not at end of BSS */
 	mov	r0, r8			/* gd_t */
 	ldr	r1, [r8, #GD_RELOCADDR]	/* dest_addr */
 	/* call board_init_r */
-	//ldr	pc, =board_init_r	/* this is auto-relocated! */
+	ldr	pc, =board_init_r	/* this is auto-relocated! */
 
 	/* we should not return here. */
 

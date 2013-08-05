@@ -17,6 +17,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #else
 #define debug(fmt, args...)
 #define printf(fmt, args...)
+#define panic(fmt, args...)
 #endif
 
 int interrupt_init (void)
@@ -31,7 +32,7 @@ int interrupt_init (void)
 
 void bad_mode (void)
 {
-	panic ("sleeping...\n");
+	panic("sleeping...\n");
 }
 
 void show_regs (struct pt_regs *regs)

@@ -29,6 +29,7 @@ OBJS-y += mmc.o
 OBJS-y += div64.o
 OBJS-y += ctype.o
 OBJS-y += memsize.o
+OBJS-y += relocate.o
 
 u-boot: $(OBJS-y) u-boot.lds
 	arm-none-linux-gnueabi-ld -T u-boot.lds --gc-sections -Bstatic \

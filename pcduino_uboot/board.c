@@ -12,6 +12,9 @@
 #include "malloc.h"
 #include "string.h"
 #include "memsize.h"
+#include "sun4i.h"
+#include "sunxi-common.h"
+#include "common.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -54,10 +57,32 @@ void s_init(void)
 	sunxi_mmc_init(0);
 }
 
+void __dram_init_banksize(void)
+{
+	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
+	gd->bd->bi_dram[0].size =  gd->ram_size;
+}
+void dram_init_banksize(void)
+	__attribute__((weak, alias("__dram_init_banksize")));
+
+static int display_dram_config(void)
+{
+	int i;
+
+#ifdef DEBUG
+	printf("RAM Configuration:\n");
+
+	for (i = 0; i < CONFIG_NR_DRAM_BANKS; i++)
+		printf("Bank #%d: %08lx ", i, gd->bd->bi_dram[i].start);
+	printf("\n");
+#endif
+	return (0);
+}
+
 static int display_banner(void)
 {
 	printf("\n\nU-boot 2013-08-04 lvrenyang\n\n");
-	debug("U-Boot code: %08lX -> %08lX  BSS: -> %08lX\n",
+	debug("U-Boot code: %08lx -> %08lx  BSS: -> %08lx\n",
 	       _TEXT_BASE,
 	       _bss_start_ofs + _TEXT_BASE, _bss_end_ofs + _TEXT_BASE);
 
@@ -109,17 +134,102 @@ void board_init_f(ulong bootflag)
 
 	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr) {
 		if ((*init_fnc_ptr)() != 0) {
-			panic("init_fnc_ptr error. now sleeping...\n");
+			panic("Init_fnc_ptr error. now sleeping...\n");
 		}
 	}
 
-	debug("monitor len: %08lX\n", gd->mon_len);
+	debug("Monitor len: %08lX\n", gd->mon_len);
 	/*
 	 * Ram is setup, size stored in gd !!
 	 */
-	debug("ramsize: %08lX\n", gd->ram_size);
+	debug("Ramsize: %08lX\n", gd->ram_size);
 
 	addr = CONFIG_SYS_SDRAM_BASE + gd->ram_size;
 
-	while(1);
+	/* reserve TLB table */
+	gd->arch.tlb_size = 4096 * 4;
+	addr -= gd->arch.tlb_size;
+
+	/* round down to next 64 kB limit */
+	addr &= ~(0x10000 - 1);
+
+	gd->arch.tlb_addr = addr;
+	debug("TLB table from 0x%08lx to 0x%08lx\n", addr, addr + gd->arch.tlb_size);
+
+	/* round down to next 4 kB limit */
+	addr &= ~(4096 - 1);
+	debug("Top of RAM usable for U-Boot at: 0x%08lx\n", addr);
+
+	/*
+	 * reserve memory for U-Boot code, data & bss
+	 * round down to next 4 kB limit
+	 */
+	addr -= gd->mon_len;
+	addr &= ~(4096 - 1);
+	debug("Reserving %ldk for U-Boot at: 0x%08lx\n", gd->mon_len>>10, addr);
+
+	/*
+	 * reserve memory for malloc() arena
+	 */
+	addr_sp = addr - TOTAL_MALLOC_LEN;
+	debug("Reserving %ldk for malloc() at: 0x%08lx\n", TOTAL_MALLOC_LEN>>10, addr_sp);
+
+	/*
+	 * (permanently) allocate a Board Info struct
+	 * and a permanent copy of the "global" data
+	 */
+	addr_sp -= sizeof(bd_t);
+	bd = (bd_t *)addr_sp;
+	gd->bd = bd;
+	debug("Reserving %zu Bytes for Board Info at: 0x%08lx\n", sizeof(bd_t), addr_sp);
+
+	gd->bd->bi_arch_number = CONFIG_MACH_TYPE; /* board id for Linux */
+
+	addr_sp -= sizeof(gd_t);
+	id = (gd_t *)addr_sp;
+	debug("Reserving %zu Bytes for Global Data at: 0x%08lx\n", sizeof(gd_t), addr_sp);
+
+	/* setup stackpointer for exeptions */
+	gd->irq_sp = addr_sp;
+
+	/* leave 3 words for abort-stack    */
+	addr_sp -= 12;
+
+	/* 8-byte alignment for ABI compliance */
+	addr_sp &= ~0x07;
+
+	debug("New Stack Pointer is: 0x%08lx\n", addr_sp);
+
+	gd->bd->bi_baudrate = gd->baudrate;
+	/* Ram ist board specific, so move it to board code ... */
+	dram_init_banksize(); /* seems unuseful */
+	display_dram_config();	/* and display it */
+
+	gd->relocaddr = addr;
+	gd->start_addr_sp = addr_sp;
+	gd->reloc_off = addr - _TEXT_BASE;
+	debug("Relocation Offset is: 0x%08lx\n", gd->reloc_off);
+	if (new_fdt) {
+		memcpy(new_fdt, gd->fdt_blob, fdt_size);
+		gd->fdt_blob = new_fdt;
+	}
+	memcpy(id, (void *)gd, sizeof(gd_t));
+}
+
+/************************************************************************
+ *
+ * This is the next part if the initialization sequence: we are now
+ * running from RAM and have a "normal" C environment, i. e. global
+ * data can be written, BSS has been cleared, the stack size in not
+ * that critical any more, etc.
+ *
+ ************************************************************************
+ */
+
+void board_init_r(gd_t *id, ulong dest_addr)
+{
+	while(1) {
+		printf("z");
+		mdelay(1000);
+	}
 }
