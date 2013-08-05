@@ -1,7 +1,7 @@
 #!/bin/bash
-if [ -z $2 ]
+if [ -z $1 ]
 then
-	echo "Usage: sudo $0 *.bin /dev/sdX "
+	echo "Usage: sudo $0 /dev/sdX "
 	exit 1
 fi
 
@@ -11,5 +11,5 @@ then
 	exit 127
 fi
 
-dd if=/dev/zero of=$2 bs=1024 seek=8 count=24
-dd if=$1 of=$2 bs=1024 seek=8
+dd if=/dev/zero of=$1 bs=1024 seek=8 count=24
+dd if=u-boot-spl.bin of=$1 bs=1024 seek=8
