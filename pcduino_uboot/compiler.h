@@ -1,6 +1,8 @@
 #ifndef _COMPILE_H
 #define _COMPILE_H
 
+#include "compiler-gcc.h"
+
 # define cpu_to_le16(x)		(x)
 # define cpu_to_le32(x)		(x)
 # define cpu_to_le64(x)		(x)

@@ -153,4 +153,12 @@ void uart_puts(char *str);
 int printf(const char *fmt, ...);
 void panic(const char *fmt, ...);
 
+#ifdef DEBUG
+#define assert(x) \
+	({ if (!(x)) \
+		panic(#x, __FILE__, __LINE__, __func__); })
+#else
+#define assert(x)
+#endif
+
 #endif

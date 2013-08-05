@@ -59,7 +59,7 @@ void spl_mmc_load_image(void)
 		printf("load_image_error!\n");
 		return;
 	}
-	printf("done.\n");
+	printf("done!\n");
 	jump_to_image_no_args(&spl_image);
 }
 

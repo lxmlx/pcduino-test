@@ -30,6 +30,13 @@ OBJS-y += div64.o
 OBJS-y += ctype.o
 OBJS-y += memsize.o
 OBJS-y += relocate.o
+OBJS-y += cache-cp15.o
+OBJS-y += cache_v7.o
+OBJS-y += dlmalloc.o
+OBJS-y += env_common.o
+OBJS-y += errno.o
+OBJS-y += env_flags.o
+OBJS-y += hushtable.o
 
 u-boot: $(OBJS-y) u-boot.lds
 	arm-none-linux-gnueabi-ld -T u-boot.lds --gc-sections -Bstatic \
@@ -37,7 +44,7 @@ u-boot: $(OBJS-y) u-boot.lds
 	arm-none-linux-gnueabi-objdump -D u-boot > u-boot.dis
 
 %.o: %.S
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -D__ASSEMBLY__ -c $< -o $@
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@

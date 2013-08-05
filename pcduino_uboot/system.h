@@ -43,4 +43,80 @@
 #define CR_AFE	(1 << 29)	/* Access flag enable			*/
 #define CR_TE	(1 << 30)	/* Thumb exception enable		*/
 
+/*
+ * This is used to ensure the compiler did actually allocate the register we
+ * asked it for some inline assembly sequences.  Apparently we can't trust
+ * the compiler from one version to another so a bit of paranoia won't hurt.
+ * This string is meant to be concatenated with the inline asm string and
+ * will cause compilation to stop on mismatch.
+ * (for details, see gcc PR 15089)
+ */
+#define __asmeq(x, y)  ".ifnc " x "," y " ; .err ; .endif\n\t"
+
+#ifndef __ASSEMBLY__
+#define isb() __asm__ __volatile__ ("" : : : "memory")
+
+#define nop() __asm__ __volatile__("mov\tr0,r0\t@ nop\n\t")
+
+#ifdef __ARM_ARCH_7A__
+#define wfi() __asm__ __volatile__ ("wfi" : : : "memory")
+#endif
+
+static inline unsigned int get_cr(void)
+{
+	unsigned int val;
+	asm("mrc p15, 0, %0, c1, c0, 0	@ get CR" : "=r" (val) : : "cc");
+	return val;
+}
+
+static inline void set_cr(unsigned int val)
+{
+	asm volatile("mcr p15, 0, %0, c1, c0, 0	@ set CR"
+	  : : "r" (val) : "cc");
+	isb();
+}
+
+static inline unsigned int get_dacr(void)
+{
+	unsigned int val;
+	asm("mrc p15, 0, %0, c3, c0, 0	@ get DACR" : "=r" (val) : : "cc");
+	return val;
+}
+
+static inline void set_dacr(unsigned int val)
+{
+	asm volatile("mcr p15, 0, %0, c3, c0, 0	@ set DACR"
+	  : : "r" (val) : "cc");
+	isb();
+}
+
+/* options available for data cache on each page */
+enum dcache_option {
+	DCACHE_OFF = 0x12,
+	DCACHE_WRITETHROUGH = 0x1a,
+	DCACHE_WRITEBACK = 0x1e,
+};
+
+/* Size of an MMU section */
+enum {
+	MMU_SECTION_SHIFT	= 20,
+	MMU_SECTION_SIZE	= 1 << MMU_SECTION_SHIFT,
+};
+
+
+#include "types.h"
+/**
+ * Change the cache settings for a region.
+ *
+ * \param start		start address of memory region to change
+ * \param size		size of memory region to change
+ * \param option	dcache option to select
+ */
+void mmu_set_region_dcache_behaviour(u32 start, int size,
+				     enum dcache_option option);
+
+#endif /* __ASSEMBLY__ */
+
+#define arch_align_stack(x) (x)
+
 #endif

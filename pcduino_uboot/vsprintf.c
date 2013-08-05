@@ -1,6 +1,6 @@
 #include "types.h"
 #include "string.h"
-#include "erron.h"
+#include "errno.h"
 #include "stddef.h"
 #include "ctype.h"
 #include <stdarg.h>

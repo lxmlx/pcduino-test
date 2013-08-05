@@ -8,10 +8,6 @@
 #define NULL ((void *)0)
 #endif
 
-#ifndef _SIZE_T
-#include <linux/types.h>
-#endif
-
 #ifndef __CHECKER__
 #undef offsetof
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)

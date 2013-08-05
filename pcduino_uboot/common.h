@@ -37,10 +37,14 @@
 #define ALLOC_CACHE_ALIGN_BUFFER(type, name, size)			\
 	ALLOC_ALIGN_BUFFER(type, name, size, ARCH_DMA_MINALIGN)
 
+#ifndef __ASSEMBLY__		/* put C only stuff in this section */
+
 typedef unsigned char		uchar;
 typedef volatile unsigned long	vu_long;
 typedef volatile unsigned short vu_short;
 typedef volatile unsigned char	vu_char;
+
+#endif /* __ASSEMBLY */
 
 #define	TOTAL_MALLOC_LEN	CONFIG_SYS_MALLOC_LEN
 

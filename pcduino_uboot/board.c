@@ -15,8 +15,11 @@
 #include "sun4i.h"
 #include "sunxi-common.h"
 #include "common.h"
+#include "cache.h"
+#include "env.h"
 
 DECLARE_GLOBAL_DATA_PTR;
+ulong monitor_flash_len;
 
 #define UARTPRINTF 1
 #define DEBUG 1
@@ -55,6 +58,19 @@ void s_init(void)
 		printf("Failed to set core voltage!. Can't set CPU frequency\n");
 	timer_init();
 	sunxi_mmc_init(0);
+}
+
+/* add board specific code here */
+int board_init(void)
+{
+	gd->bd->bi_boot_params = (PHYS_SDRAM_1 + 0x100);
+	return 0;
+}
+
+void enable_caches(void)
+{
+	/* Enable D-cache. I-cache is already enabled in start.S */
+	dcache_enable();
 }
 
 void __dram_init_banksize(void)
@@ -216,6 +232,22 @@ void board_init_f(ulong bootflag)
 	memcpy(id, (void *)gd, sizeof(gd_t));
 }
 
+/*
+ * Tell if it's OK to load the environment early in boot.
+ *
+ * If CONFIG_OF_CONFIG is defined, we'll check with the FDT to see
+ * if this is OK (defaulting to saying it's not OK).
+ *
+ * NOTE: Loading the environment early can be a bad idea if security is
+ *       important, since no verification is done on the environment.
+ *
+ * @return 0 if environment should not be loaded, !=0 if it is ok to load
+ */
+static int should_load_env(void)
+{
+	return 1;
+}
+
 /************************************************************************
  *
  * This is the next part if the initialization sequence: we are now
@@ -228,6 +260,29 @@ void board_init_f(ulong bootflag)
 
 void board_init_r(gd_t *id, ulong dest_addr)
 {
+	ulong malloc_start;
+
+	gd->flags |= GD_FLG_RELOC;
+
+	monitor_flash_len = _end_ofs;
+
+	/* Enable caches */
+	enable_caches();
+
+	debug("Monitor flash len: 0x%08lx\n", monitor_flash_len);
+	board_init(); /* Setup chipselects */
+
+	debug("Now running in RAM - U-Boot at: 0x%08lx\n", dest_addr);
+
+	/* The Malloc area is immediately below the monitor copy in DRAM */
+	malloc_start = dest_addr - TOTAL_MALLOC_LEN;
+	mem_malloc_init(malloc_start, TOTAL_MALLOC_LEN);
+
+	if (should_load_env())
+		env_relocate();
+	else
+		set_default_env(NULL);
+
 	while(1) {
 		printf("z");
 		mdelay(1000);
