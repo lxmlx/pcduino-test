@@ -11,5 +11,5 @@ then
 	exit 127
 fi
 
-dd if=/dev/zero of=$2 bs=1M count=1
+dd if=/dev/zero of=$2 bs=1024 seek=8 count=24
 dd if=$1 of=$2 bs=1024 seek=8

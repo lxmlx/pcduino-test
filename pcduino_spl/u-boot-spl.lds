@@ -1,5 +1,4 @@
 MEMORY { .sram : ORIGIN = 0x20, LENGTH = 0x6000 }
-MEMORY { .sdram : ORIGIN = 0x50000000, LENGTH = 0x80000 }
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(_start)
@@ -25,5 +24,5 @@ SECTIONS
   *(.bss*)
   . = ALIGN(4);
   __bss_end = .;
- } > .sdram
+ } > .sram
 }
