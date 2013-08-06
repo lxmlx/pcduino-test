@@ -149,9 +149,15 @@
 void uart_init(void);
 char uart_getchar(void);
 void uart_putchar(char c);
+int uart_testchar(int port);
 void uart_puts(char *str);
 int printf(const char *fmt, ...);
 void panic(const char *fmt, ...);
+
+int ctrlc(void);
+int disable_ctrlc(int disable);
+int had_ctrlc (void);
+void clear_ctrlc(void);
 
 #ifdef DEBUG
 #define assert(x) \

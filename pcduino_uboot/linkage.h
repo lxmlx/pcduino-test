@@ -9,8 +9,8 @@
 #define SYMBOL_NAME(X)		X
 #define SYMBOL_NAME_LABEL(X)	X##:
 
-#define __ALIGN .align 0
-#define __ALIGN_STR ".align 0"
+#define __ALIGN .align 4
+#define __ALIGN_STR ".align 4"
 
 #define ALIGN			__ALIGN
 #define ALIGN_STR		__ALIGN_STR

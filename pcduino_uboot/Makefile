@@ -9,7 +9,7 @@ CFLAGS := -Os -Wstrict-prototypes -Wall -ffreestanding -nostdinc \
 
 OBJS-y += start.o
 OBJS-y += bss.o
-OBJS-y += interrupt.o
+OBJS-y += interrupts.o
 OBJS-y += lowlevel_init.o
 OBJS-y += board.o
 OBJS-y += syslib.o
@@ -33,10 +33,18 @@ OBJS-y += relocate.o
 OBJS-y += cache-cp15.o
 OBJS-y += cache_v7.o
 OBJS-y += dlmalloc.o
-OBJS-y += env_common.o
 OBJS-y += errno.o
-OBJS-y += env_flags.o
+OBJS-y += env_common.o
 OBJS-y += hushtable.o
+OBJS-y += env_flags.o
+OBJS-y += env_attr.o
+OBJS-y += linux_string.o
+OBJS-y += cmd_nvedit.o
+OBJS-y += env_callback.o
+OBJS-y += image.o
+OBJS-y += main.o
+OBJS-y += hush.o
+OBJS-y += command.o
 
 u-boot: $(OBJS-y) u-boot.lds
 	arm-none-linux-gnueabi-ld -T u-boot.lds --gc-sections -Bstatic \

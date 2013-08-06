@@ -48,4 +48,37 @@ typedef volatile unsigned char	vu_char;
 
 #define	TOTAL_MALLOC_LEN	CONFIG_SYS_MALLOC_LEN
 
+/*
+ * General Purpose Utilities
+ */
+#define min(X, Y)				\
+	({ typeof(X) __x = (X);			\
+		typeof(Y) __y = (Y);		\
+		(__x < __y) ? __x : __y; })
+
+#define max(X, Y)				\
+	({ typeof(X) __x = (X);			\
+		typeof(Y) __y = (Y);		\
+		(__x > __y) ? __x : __y; })
+
+#define MIN(x, y)  min(x, y)
+#define MAX(x, y)  max(x, y)
+
+#define min3(X, Y, Z)				\
+	({ typeof(X) __x = (X);			\
+		typeof(Y) __y = (Y);		\
+		typeof(Z) __z = (Z);		\
+		__x < __y ? (__x < __z ? __x : __z) :	\
+		(__y < __z ? __y : __z); })
+
+#define max3(X, Y, Z)				\
+	({ typeof(X) __x = (X);			\
+		typeof(Y) __y = (Y);		\
+		typeof(Z) __z = (Z);		\
+		__x > __y ? (__x > __z ? __x : __z) :	\
+		(__y > __z ? __y : __z); })
+
+#define MIN3(x, y, z)  min3(x, y, z)
+#define MAX3(x, y, z)  max3(x, y, z)
+
 #endif

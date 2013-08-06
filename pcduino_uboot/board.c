@@ -16,7 +16,11 @@
 #include "sunxi-common.h"
 #include "common.h"
 #include "cache.h"
-#include "env.h"
+#include "env_common.h"
+#include "interrupts.h"
+#include "cmd_nvedit.h"
+#include "image.h"
+#include "main.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 ulong monitor_flash_len;
@@ -279,12 +283,22 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	mem_malloc_init(malloc_start, TOTAL_MALLOC_LEN);
 
 	if (should_load_env())
-		env_relocate();
+		set_default_env(NULL);
 	else
 		set_default_env(NULL);
 
-	while(1) {
-		printf("z");
-		mdelay(1000);
+	/* here i don't set jumptable */
+
+	interrupt_init();
+
+	/* Initialize from environment */
+	load_addr = getenv_ulong("loadaddr", 16, load_addr);
+	debug("load_addr: 0x%08x\n", load_addr);
+
+	/* main_loop() can return to retry autoboot, if so just run it again. */
+	for (;;) {
+		main_loop();
 	}
+
+	/* NOTREACHED - no way out of command loop except booting */
 }

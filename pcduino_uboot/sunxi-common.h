@@ -65,7 +65,9 @@
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (1 << 20))
 
 #define CONFIG_BOOTCOMMAND	"bootm 0x50000000;"
-#define CONFIG_BOOTDELAY	3
+#define CONFIG_BOOTDELAY	0
 #define CONFIG_ENV_SIZE		(128 << 10)	/* 128KB */
+
+#define CONFIG_SYS_LOAD_ADDR		0x50000000 /* default load address */
 
 #endif

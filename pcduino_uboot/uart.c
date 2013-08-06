@@ -36,6 +36,11 @@ void uart_putchar(char c)
 	return;
 }
 
+int uart_testchar(int port)
+{
+	return (readl(UART_LSR(port)) & UART_LSR_DR) != 0;
+}
+
 void uart_puts(char *str)
 {
 	while(*str)
@@ -74,4 +79,44 @@ void panic(const char *fmt, ...)
 	}
 
 	return;
+}
+
+/* test if ctrl-c was pressed */
+static int ctrlc_disabled = 0;	/* see disable_ctrl() */
+static int ctrlc_was_pressed = 0;
+int ctrlc(void)
+{
+	if (!ctrlc_disabled) {
+		if (uart_testchar(0)) {
+			switch (uart_getchar()) {
+			case 0x03:		/* ^C - Control C */
+				ctrlc_was_pressed = 1;
+				return 1;
+			default:
+				break;
+			}
+		}
+	}
+	return 0;
+}
+
+/* pass 1 to disable ctrlc() checking, 0 to enable.
+ * returns previous state
+ */
+int disable_ctrlc(int disable)
+{
+	int prev = ctrlc_disabled;	/* save previous state */
+
+	ctrlc_disabled = disable;
+	return prev;
+}
+
+int had_ctrlc (void)
+{
+	return ctrlc_was_pressed;
+}
+
+void clear_ctrlc(void)
+{
+	ctrlc_was_pressed = 0;
 }
