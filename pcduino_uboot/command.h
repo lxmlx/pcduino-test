@@ -3,6 +3,42 @@
 
 #include "types.h"
 
+/* Default to a width of 8 characters for help message command width */
+#ifndef CONFIG_SYS_HELP_CMD_WIDTH
+#define CONFIG_SYS_HELP_CMD_WIDTH	8
+#endif
+
+#ifndef	__ASSEMBLY__
+/*
+ * Monitor Command Table
+ */
+
+struct cmd_tbl_s {
+	char		*name;		/* Command Name			*/
+	int		maxargs;	/* maximum number of arguments	*/
+	int		repeatable;	/* autorepeat allowed?		*/
+					/* Implementation function	*/
+	int		(*cmd)(struct cmd_tbl_s *, int, int, char * const []);
+	char		*usage;		/* Usage message	(short)	*/
+#ifdef	CONFIG_SYS_LONGHELP
+	char		*help;		/* Help  message	(long)	*/
+#endif
+#ifdef CONFIG_AUTO_COMPLETE
+	/* do auto completion on the arguments */
+	int		(*complete)(int argc, char * const argv[], char last_char, int maxv, char *cmdv[]);
+#endif
+};
+
+typedef struct cmd_tbl_s	cmd_tbl_t;
+
+/* command.c */
+int _do_help (cmd_tbl_t *cmd_start, int cmd_items, cmd_tbl_t * cmdtp, int
+	      flag, int argc, char * const argv[]);
+cmd_tbl_t *find_cmd(const char *cmd);
+cmd_tbl_t *find_cmd_tbl (const char *cmd, cmd_tbl_t *table, int table_len);
+
+extern int cmd_usage(const cmd_tbl_t *cmdtp);
+
 /*
  * Error codes that commands return to cmd_process(). We use the standard 0
  * and 1 for success and failure, but add one more case - failure with a
@@ -24,5 +60,36 @@ enum command_ret_t {
 
 enum command_ret_t cmd_process(int flag, int argc, char * const argv[],
 			       int *repeatable, ulong *ticks);
+
+#endif	/* __ASSEMBLY__ */
+
+#ifdef CONFIG_AUTO_COMPLETE
+# define _CMD_COMPLETE(x) x,
+#else
+# define _CMD_COMPLETE(x)
+#endif
+#ifdef CONFIG_SYS_LONGHELP
+# define _CMD_HELP(x) x,
+#else
+# define _CMD_HELP(x)
+#endif
+
+#define U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,		\
+				_usage, _help, _comp)			\
+		{ #_name, _maxargs, _rep, _cmd, _usage,			\
+			_CMD_HELP(_help) _CMD_COMPLETE(_comp) }
+
+#define U_BOOT_CMD_MKENT(_name, _maxargs, _rep, _cmd, _usage, _help)	\
+	U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,		\
+					_usage, _help, NULL)
+
+#define U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help, _comp) \
+	ll_entry_declare(cmd_tbl_t, _name, cmd) =			\
+		U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,	\
+						_usage, _help, _comp);
+
+#define U_BOOT_CMD(_name, _maxargs, _rep, _cmd, _usage, _help)		\
+	U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help, NULL)
+
 
 #endif
