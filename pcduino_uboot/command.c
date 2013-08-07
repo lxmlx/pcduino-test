@@ -134,12 +134,12 @@ int cmd_usage(const cmd_tbl_t *cmdtp)
 	printf("Usage:\n%s ", cmdtp->name);
 
 	if (!cmdtp->help) {
-		puts ("- No additional help available.\n");
+		uart_puts ("- No additional help available.\n");
 		return 1;
 	}
 
-	puts (cmdtp->help);
-	putc ('\n');
+	uart_puts (cmdtp->help);
+	uart_putchar ('\n');
 #endif	/* CONFIG_SYS_LONGHELP */
 	return 1;
 }
@@ -162,7 +162,7 @@ static int cmd_call(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	result = (cmdtp->cmd)(cmdtp, flag, argc, argv);
 	if (result)
-		debug("Command failed, result=%d", result);
+		debug("Command failed, result=%d\n", result);
 	return result;
 }
 
@@ -171,14 +171,14 @@ enum command_ret_t cmd_process(int flag, int argc, char * const argv[],
 {
 	enum command_ret_t rc = CMD_RET_SUCCESS;
 	cmd_tbl_t *cmdtp;
+#ifdef DEBUG
 	int i;
-
 	debug("cmd_process: flag: %d, argc: %d, argv: ",
 		flag, argc);
 	for(i = 0; i < argc; i++)
 		debug("%s, ", argv[i]);
 	debug("\n");
-
+#endif
 	/* Look up command in command table */
 	cmdtp = find_cmd(argv[0]);
 	if (cmdtp == NULL) {

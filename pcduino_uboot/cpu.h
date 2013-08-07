@@ -104,4 +104,10 @@
 
 #define SUNXI_CPU_CFG			(SUNXI_TIMER_BASE + 0x13c)
 
+#ifndef __ASSEMBLY__
+
+int cleanup_before_linux(void);
+
+#endif
+
 #endif

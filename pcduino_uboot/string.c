@@ -87,6 +87,37 @@ int memcmp(const void * cs,const void * ct,size_t count)
 }
 
 /**
+ * memmove - Copy one area of memory to another
+ * @dest: Where to copy to
+ * @src: Where to copy from
+ * @count: The size of the area.
+ *
+ * Unlike memcpy(), memmove() copes with overlapping areas.
+ */
+void * memmove(void * dest,const void *src,size_t count)
+{
+	char *tmp, *s;
+
+	if (src == dest)
+		return dest;
+
+	if (dest <= src) {
+		tmp = (char *) dest;
+		s = (char *) src;
+		while (count--)
+			*tmp++ = *s++;
+		}
+	else {
+		tmp = (char *) dest + count;
+		s = (char *) src + count;
+		while (count--)
+			*--tmp = *--s;
+		}
+
+	return dest;
+}
+
+/**
  * strlen - Find the length of a string
  * @s: The string to be sized
  */

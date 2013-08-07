@@ -2,6 +2,7 @@
 #define _COMMAND_H
 
 #include "types.h"
+#include "sunxi-common.h"
 
 /* Default to a width of 8 characters for help message command width */
 #ifndef CONFIG_SYS_HELP_CMD_WIDTH
@@ -62,6 +63,8 @@ enum command_ret_t cmd_process(int flag, int argc, char * const argv[],
 			       int *repeatable, ulong *ticks);
 
 #endif	/* __ASSEMBLY__ */
+
+#include "linker_lists.h"
 
 #ifdef CONFIG_AUTO_COMPLETE
 # define _CMD_COMPLETE(x) x,

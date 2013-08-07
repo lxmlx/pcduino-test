@@ -1,0 +1,8 @@
+#ifndef _CONFIG_DEFAULTS_H_
+#define _CONFIG_DEFAULTS_H_
+
+#define CONFIG_GZIP 1
+#define CONFIG_ZLIB 1
+#define CONFIG_PARTITIONS 1
+
+#endif

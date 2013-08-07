@@ -5,7 +5,7 @@ CC=arm-none-linux-gnueabi-gcc
 PLATFORM_LIBGCC := -L $(shell dirname `$(CC) -print-libgcc-file-name`) -lgcc
 gccincdir := $(shell $(CC) -print-file-name=include)
 CFLAGS := -Os -Wstrict-prototypes -Wall -ffreestanding -nostdinc \
-		-isystem $(gccincdir)  -lgcc
+		-isystem $(gccincdir)  -lgcc -D__KERNEL__
 
 OBJS-y += start.o
 OBJS-y += bss.o
@@ -45,6 +45,11 @@ OBJS-y += image.o
 OBJS-y += main.o
 OBJS-y += hush.o
 OBJS-y += command.o
+OBJS-y += cmd_bootm.o
+OBJS-y += lmb.o
+OBJS-y += bootm.o
+OBJS-y += crc32.o
+OBJS-y += cpu.o
 
 u-boot: $(OBJS-y) u-boot.lds
 	arm-none-linux-gnueabi-ld -T u-boot.lds --gc-sections -Bstatic \

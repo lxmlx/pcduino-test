@@ -9,5 +9,6 @@ void set_default_env(const char *s);
 
 uchar env_get_char(int index);
 const uchar *env_get_addr(int index);
+int getenv_yesno(const char *var);
 
 #endif

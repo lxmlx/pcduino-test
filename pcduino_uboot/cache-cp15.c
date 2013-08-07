@@ -158,6 +158,21 @@ static void cache_disable(uint32_t cache_bit)
 	set_cr(reg & ~cache_bit);
 }
 
+void icache_enable(void)
+{
+	cache_enable(CR_I);
+}
+
+void icache_disable(void)
+{
+	cache_disable(CR_I);
+}
+
+int icache_status(void)
+{
+	return (get_cr() & CR_I) != 0;
+}
+
 void dcache_enable(void)
 {
 	cache_enable(CR_C);

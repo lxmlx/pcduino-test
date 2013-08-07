@@ -30,6 +30,15 @@ int interrupt_init (void)
 	return 0;
 }
 
+void enable_interrupts (void)
+{
+	return;
+}
+int disable_interrupts (void)
+{
+	return 0;
+}
+
 void bad_mode (void)
 {
 	panic("sleeping...\n");
