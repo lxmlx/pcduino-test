@@ -15,7 +15,6 @@
 #include "cmd_nvedit.h"
 #include "compiler.h"
 #include "config_defaults.h"
-#include "cpu.h"
 
 #define DEBUG 1
 
@@ -256,32 +255,6 @@ static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 	return 0;
 }
 
-static void announce_and_cleanup(void)
-{
-	printf("\nStarting kernel ...\n\n");
-	cleanup_before_linux();
-}
-
-/* Subcommand: GO */
-static void boot_jump_linux(bootm_headers_t *images)
-{
-	/* seems gd->bd is not init ? */
-	unsigned long machid = 4104;
-	void (*kernel_entry)(int zero, int arch, uint params);
-	unsigned long r2;
-
-	kernel_entry = (void (*)(int, int, uint))images->ep;
-
-	debug("## Transferring control to Linux (at address %08lx)" \
-		"...\n", (ulong) kernel_entry);
-	announce_and_cleanup();
-
-//	r2 = gd->bd->bi_boot_params;
-
-	kernel_entry(0, machid, NULL);
-
-}
-
 #define BOOTM_ERR_RESET		-1
 #define BOOTM_ERR_OVERLAP	-2
 #define BOOTM_ERR_UNIMPLEMENTED	-3
@@ -396,7 +369,7 @@ int do_bootm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	if (ret < 0)
 		return 1;
 
-	boot_jump_linux(&images);
+	do_bootm_linux(0, argc, argv, &images);
 
 	return 1;
 }
